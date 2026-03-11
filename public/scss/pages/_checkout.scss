@@ -1,0 +1,511 @@
+/* Checkout */
+.checkout {
+	@include mq('lg') {
+		.col-lg-3 {
+			-ms-flex: 0 0 30%;
+			flex: 0 0 30%;
+			max-width: 30%;
+		}
+
+		.col-lg-9 {
+			-ms-flex: 0 70%;
+			flex: 0 0 70%;
+			max-width: 70%;
+		}
+	}
+
+	label {
+		margin-bottom: .2rem;
+	}
+
+	.form-control {
+		margin-bottom: 1.3rem; 
+
+		& + .form-control {
+			margin-top: 2rem;
+		}
+	}
+
+	.form-control:not(:focus) {
+		background-color: #f9f9f9;
+	}
+
+	textarea.form-control {
+		min-height: 150px;
+	}
+
+	.custom-control {
+		margin-top: 2.5rem;
+
+		& + .custom-control {
+			margin-top: 1.8rem;
+		}
+
+		& + label {
+			margin-top: 1rem;
+		}
+		.custom-control-label {
+			font-weight: 400;
+			color: #333;
+		}
+	}
+}
+
+.checkout-title {
+	font-weight: 500;
+	font-size: 1.6rem;
+	letter-spacing: 0;
+	margin-top: 2.2rem;
+	margin-bottom: 1.8rem;
+}
+
+// .checkout-discount {
+// 	position: relative;
+// 	max-width: 350px;
+// 	margin-bottom: .5rem;
+
+// 	label {
+// 		position: absolute;
+// 		left: 0;
+// 		top: 50%;
+// 		width: 100%;
+// 		padding-left: 1.1rem;
+// 		padding-right: 1.1rem;
+// 		font-weight: 400;
+// 		transform: translateY(-50%);
+// 		-ms-transform: translateY(-50%);
+// 		opacity: 1;
+// 		transition: all .3s;
+
+// 		span {
+// 			color: $primary-color;
+// 		}
+// 	}
+
+// 	.form-control {
+// 		background-color: transparent !important;
+// 		border-radius: .3rem;
+// 		border: .1rem dashed #d7d7d7;
+// 		padding-left: 1.1rem;
+// 		padding-right: 1.1rem;
+
+// 		&:focus {
+// 			border-color: $primary-color;
+// 			outline: none !important;
+// 		}
+// 	}
+// }
+
+
+
+/* Updated CSS */
+.checkout-discount-container {
+	max-width: 1188px;
+	margin-bottom: 1.5rem;
+  }
+  
+  .coupon-prompt {
+	margin-bottom: 1rem;
+	border: 1px dashed #d7d7d7;
+	padding: 1rem;
+	border-radius: 0.3rem;
+  }
+  
+  .coupon-link {
+	color: $primary-color;
+	cursor: pointer;
+	font-size: 1.4rem;
+  }
+  
+  .coupon-link:hover {
+	text-decoration: underline;
+  }
+  
+  .coupon-form {
+	padding: 1rem;
+	border: 1px solid #d7d7d7;
+	border-radius: 0.3rem;
+	background: #fff;
+  }
+  
+  .coupon-form p {
+	font-size: 1.4rem;
+	color: #6c757d;
+	margin-bottom: 0.5rem;
+  }
+  
+  .coupon-chips-container {
+	margin-bottom: 1rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+  }
+  
+  .coupon-chip {
+	display: flex;
+	align-items: center;
+	background-color: #fff;
+	border: 1px solid #e9ecef;
+	border-radius: 0.5rem;
+	padding: 0.8rem;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+	transition: transform 0.2s ease;
+	max-width: 300px;
+  }
+  
+  .coupon-chip:hover {
+	transform: translateY(-2px);
+  }
+  
+  .coupon-chip-content {
+	cursor: pointer;
+	flex: 1;
+	padding-right: 0.5rem;
+  }
+  
+  .coupon-chip-code {
+	display: block;
+	font-weight: 600;
+	font-size: 1.4rem;
+	color: $primary-color;
+	margin-bottom: 0.3rem;
+  }
+  
+  .coupon-chip-description {
+	display: block;
+	font-size: 1rem;
+	color: #6c757d;
+	line-height: 1.3;
+  }
+  
+  .coupon-copy-button {
+	background-color: $primary-color;
+	// color: white;
+	border: none;
+	border-radius: 0.25rem;
+	// padding: 0.5rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 4rem;
+	height: 4rem;
+	position: relative;
+	overflow: hidden;
+  }
+  
+  .coupon-copy-button:hover {
+	opacity: 0.9;
+  }
+  
+  .copy-icon {
+	transition: transform 0.3s ease;
+  }
+  
+  .coupon-copy-button .copy-path {
+	opacity: 1;
+	transition: opacity 0.3s ease;
+  }
+  
+  .coupon-copy-button .check-path {
+	opacity: 0;
+	transition: opacity 0.3s ease;
+  }
+  
+  .coupon-copy-button.copied .copy-path {
+	opacity: 0;
+  }
+  
+  .coupon-copy-button.copied .check-path {
+	opacity: 1;
+  }
+  
+  .coupon-input-group {
+	max-width: 500px;
+	display: flex;
+	gap: 0.5rem;
+  }
+  
+  .coupon-input {
+	flex: 1;
+	padding: 0.5rem;
+	border: 1px solid #ced4da;
+	border-radius: 0.25rem;
+	font-size: 1.4rem;
+  }
+  
+  .coupon-apply-button {
+	background-color: $primary-color;
+	color: white;
+	border: none;
+	border-radius: 0.25rem;
+	padding: 0.5rem 2rem;
+	cursor: pointer;
+	font-size: 1.4rem;
+	width: 2.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+  }
+ 
+
+  .coupon-error-message {
+	color: #ff0000;
+	font-size: 12px;
+	margin-top: 5px;
+  }
+
+
+.summary {
+	padding: 2.5rem 3rem 3rem;
+	border: .1rem dashed #d7d7d7;
+	background-color: #f9f9f9;
+	border-radius: .3rem;
+	margin-top: 2rem;
+	margin-bottom: 2rem;
+}
+
+.summary-title {
+	font-weight: 500;
+	font-size: 1.6rem;
+	letter-spacing: 0;
+	padding-bottom: 1.7rem;
+	border-bottom: .1rem solid #cccccc;
+	margin-bottom: 2.1rem;
+}
+
+.table.table-summary {
+	line-height: 1.86;
+	color: $body-text;
+	border: none;
+	margin-bottom: 0;
+
+	a {
+		color: inherit;
+
+		&:hover,
+		&:focus {
+			color: $primary-color;
+		}
+	}
+
+	thead th,
+	.summary-subtotal td {
+		color: $dark-text;
+		font-weight: 400;
+		font-size: 1.6rem;
+	}
+
+	thead th {
+		border-bottom: none;
+		padding: 0 0 .3rem;
+	}
+
+	tbody td {
+		padding: 0;
+		height: 70px;
+		border-bottom: .1rem solid #ebebeb;
+	}
+	
+	thead th,
+	tbody td {
+		vertical-align: middle;
+		border-top: none;
+		&:last-child {
+			text-align: right;
+			min-width: 100px;
+		}
+	}
+
+	.summary-total td {
+		font-weight: 400;
+		font-size: 1.6rem;
+		color: $primary-color;
+		border-bottom: none;
+	}
+}
+
+.accordion-summary {
+	margin-bottom: 3.2rem;
+	.card {
+		overflow: hidden;
+		color: $light-text;
+		font-weight: 300;
+		font-size: 1.2rem;
+		line-height: 1.67;
+		border: none;
+		background-color: transparent;
+	}
+
+	.card-title {
+		font-weight: 300;
+		font-size: 1.4rem;
+		color: $dark-text;
+		letter-spacing: 0;
+
+		.toggle-button {
+			color: inherit;
+			padding: .7rem 0 .7rem 3rem;
+
+			img {
+				margin-top: 1rem;
+			}
+
+			&:hover,
+			&:focus {
+				color: inherit;
+			}
+
+			small {
+				font-size: 1.1rem;
+				color: $light-text;
+			}
+
+			&:before {
+				content: '';
+				width: 1.6rem;
+				height: 1.6rem;
+				border-radius: 50%;
+				border: .1rem solid #dadada;
+				right: auto;
+				left:0;
+				top: .7rem;
+				transform: translateY(0);
+				-ms-transform: translateY(0);
+			}
+
+			&:after {
+				content: '';
+				display: block;
+				width: .6rem;
+				height: .6rem;
+				position: absolute;
+				left: .5rem;
+				top: 1.2rem;
+				border-radius: 50%;
+				background-color: transparent;
+				transition: all .3s;
+				visibility: visible;
+				opacity: 1;
+			}
+
+			&.expanding,
+			&.expanded {
+				&:before {
+					border-color: $primary-color;
+				}
+
+				&:after {
+					background-color: $primary-color;
+				}
+			}
+		}
+	}
+
+	.card-body {
+		padding: .4rem 0 .8rem 3rem;
+	}
+}
+
+.paypal-link {
+	cursor: pointer;
+	margin-top: .2rem;
+
+	&:hover,
+	&:focus {
+		color: $primary-color !important;
+	}
+}
+
+@include mq('lg') {
+	.summary {
+		margin-top: 0;
+	}
+}
+
+
+
+
+.payment-message {
+	margin-top: 4px;
+	padding: 4px;
+	background-color: #f9f9f9;
+	font-size: 12px;
+	opacity: 0;
+	transform: translateY(-20px);
+	transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  }
+  
+  .payment-message.fade-in {
+	opacity: 1;
+	transform: translateY(0);
+  }
+  
+  .payment-methods div {
+	margin-bottom: 10px;
+  }
+  
+
+
+  .radio-btn{
+	gap: 4px;
+  };
+
+
+  .payment-methods .radio-btn {
+	margin-bottom: 15px;
+  }
+  
+  .payment-methods input[type="radio"] {
+	margin-right: 6px;
+  }
+  
+  .payment-methods label {
+	font-size: 14px;
+	cursor: pointer;
+  }
+  
+
+
+  .is-invalid {
+	background-image: none !important; /* Removes the default icon */
+	border-color: red; /* Keeps the red border for invalid input */
+  }
+  
+
+
+
+  .paypal-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+  }
+  .paypal-modal-content {
+	background: white;
+	padding: 20px;
+	border-radius: 8px;
+	width: 400px;
+	max-width: 90%;
+	position: relative;
+  }
+  .close-modal {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	border: none;
+	background: transparent;
+	font-size: 18px;
+	cursor: pointer;
+  }
+  
+
+  .paypal-powered-by {
+	display: none !important;
+  }
