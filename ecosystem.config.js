@@ -2,7 +2,7 @@
 module.exports = {
     apps: [
         {
-            name: 'frequency-ecom-template-4',
+            name: 'frequency-ecom-multi-seller-template-1',
             script: 'yarn',
             args: 'start',
             exec_mode: 'fork',
