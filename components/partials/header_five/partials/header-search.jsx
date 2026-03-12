@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { useLazyQuery } from "@apollo/react-hooks";
+import { useLazyQuery } from "@apollo/client";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 
 import withApollo from "~/api/apollo";

@@ -53,9 +53,23 @@ const EncryptResponse = (data) => {
 };
 
 const DecryptResponse = (encryptedData) => {
-  try {
-    if (!ALGORITHM) return encryptedData;
+  // Early return for any falsy values or non-strings
+  if (!encryptedData || typeof encryptedData !== 'string' || encryptedData.trim() === '') {
+    console.warn("DecryptResponse: Invalid input data:", { 
+      type: typeof encryptedData, 
+      value: encryptedData,
+      isString: typeof encryptedData === 'string',
+      length: encryptedData?.length 
+    });
+    return encryptedData;
+  }
 
+  // Early return if no algorithm configured
+  if (!ALGORITHM) {
+    return encryptedData;
+  }
+
+  try {
     const secretKey = Buffer.from(process.env.ENCRYPT_SECRET_KEY, "base64");
     const iv = Buffer.from(process.env.ENCRYPT_IV, "base64");
     const algorithm = process.env.ALGORITHM || "aes-256-cbc";
@@ -68,7 +82,13 @@ const DecryptResponse = (encryptedData) => {
     return JSON.parse(decrypted);
   } catch (error) {
     console.error("Error during decryption:", error);
-    throw new Error("Decryption failed");
+    console.error("EncryptedData details:", { 
+      type: typeof encryptedData, 
+      value: encryptedData,
+      length: encryptedData?.length 
+    });
+    // Return the original data instead of throwing error
+    return encryptedData;
   }
 };
 
@@ -97,7 +117,13 @@ export const apirequest = async (method, url, data = null, params = null) => {
     }
 
     const response = await api(config);
-    return ENCRYPT === "true" ? DecryptResponse(response.data) : response.data;
+    
+    // Only decrypt if encryption is enabled AND we have valid response data
+    if (ENCRYPT === "true" && response.data && typeof response.data === 'string') {
+      return DecryptResponse(response.data);
+    }
+    
+    return response.data;
   } catch (error) {
     handleError(error);
   }
@@ -106,15 +132,25 @@ export const apirequest = async (method, url, data = null, params = null) => {
 const handleError = (error) => {
   if (error.response) {
     let errorMessage = error.response.data;
-    try {
-      errorMessage = DecryptResponse(error.response.data);
-    } catch (decryptionError) {
-      console.error("Error response decryption failed:", decryptionError);
+    
+    // Only try to decrypt if we have valid data and encryption is enabled
+    if (ENCRYPT === "true" && errorMessage && typeof errorMessage === 'string' && errorMessage.trim() !== '') {
+      try {
+        const decryptedMessage = DecryptResponse(errorMessage);
+        if (decryptedMessage !== errorMessage) {
+          errorMessage = decryptedMessage;
+        }
+      } catch (decryptionError) {
+        console.error("Error response decryption failed:", decryptionError);
+        // Keep the original error message if decryption fails
+      }
     }
 
     if (errorMessage === "Invalid token" || error.response.status === 401) {
-      localStorage.removeItem("frequency-auth");
-      window.location.href = "/login";
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("frequency-auth");
+        window.location.href = "/login";
+      }
     }
 
     throw new Error(

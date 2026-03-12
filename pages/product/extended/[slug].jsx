@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-import { useQuery } from '@apollo/react-hooks';
+import { useQuery } from '@apollo/client';
 
 import withApollo from '~/server/apollo';
 import { GET_PRODUCT } from '~/server/queries';

@@ -2,7 +2,7 @@ import dynamic from "next/dynamic";
 import { fetchPageData } from "~/api/fetchPageData";
 import Reveal from "react-awesome-reveal";
 import { fadeIn } from "~/utils/data";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import Loader from "~/components/Loader";
 
 // Dynamically import components

@@ -1,6 +1,69 @@
-import { Magnifier } from 'react-image-magnifiers';
 import React, { useState, useEffect } from 'react';
 import LightBox from 'react-image-lightbox';
+
+// React 19 compatible wrapper for Magnifier
+const MagnifierWrapper = React.memo(({ imageSrc, imageAlt, largeImageSrc, ...props }) => {
+    const [MagnifierComponent, setMagnifierComponent] = useState(null);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+        const loadMagnifier = async () => {
+            try {
+                const { Magnifier } = await import('react-image-magnifiers');
+                setMagnifierComponent(() => Magnifier);
+            } catch (err) {
+                console.warn('Failed to load Magnifier component:', err);
+                setError(true);
+            }
+        };
+
+        loadMagnifier();
+    }, []);
+
+    if (error || !MagnifierComponent) {
+        return (
+            <div className="magnifier-fallback" style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <img 
+                    src={imageSrc} 
+                    alt={imageAlt}
+                    style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover',
+                        cursor: 'zoom-in'
+                    }}
+                />
+            </div>
+        );
+    }
+
+    try {
+        return (
+            <MagnifierComponent
+                imageSrc={imageSrc}
+                imageAlt={imageAlt}
+                largeImageSrc={largeImageSrc}
+                {...props}
+            />
+        );
+    } catch (err) {
+        console.warn('Magnifier component error:', err);
+        return (
+            <div className="magnifier-fallback" style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <img 
+                    src={imageSrc} 
+                    alt={imageAlt}
+                    style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover',
+                        cursor: 'zoom-in'
+                    }}
+                />
+            </div>
+        );
+    }
+});
 
 function GallerySticky( props ) {
     const { product } = props;
@@ -64,10 +127,10 @@ function GallerySticky( props ) {
                 {
                     product.pictures.map( ( item, index ) => (
                         <figure className="product-main-image" key={ index } style={ { backgroundColor: '#f4f4f4' } }>
-                            <Magnifier
+                            <MagnifierWrapper
                                 imageSrc={ process.env.NEXT_PUBLIC_ASSET_URI + item.url }
                                 imageAlt="product"
-                                largeImageSrc={ process.env.NEXT_PUBLIC_ASSET_URI + item.url } // Optional
+                                largeImageSrc={ process.env.NEXT_PUBLIC_ASSET_URI + item.url }
                                 dragToMove={ false }
                                 mouseActivation="hover"
                                 className="zoom-image position-relative overflow-hidden"

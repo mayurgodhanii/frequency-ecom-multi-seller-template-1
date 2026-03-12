@@ -5,7 +5,7 @@ import ALink from "~/components/features/alink";
 import PageHeader from "~/components/features/page-header";
 import { logout } from "~/store/authReducer";
 import { connect } from "react-redux";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import Pagination from "~/components/features/pagination";
 import { apirequest } from "~/utils/api";
 import { toast } from "react-toastify";
@@ -318,11 +318,11 @@ function DashBoard(logout) {
     return response;
   };
 
-  const { data, isLoading, isError, refetch } = useQuery(
-    ["orders", parseInt(page)],
-    fetchOrders,
-    { keepPreviousData: true }
-  );
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["orders", parseInt(page)],
+    queryFn: fetchOrders,
+    keepPreviousData: true,
+  });
 
   const formatOrderStatus = (status) => {
     return status

@@ -70,7 +70,7 @@ const Banners = ({ content }) => {
                   )}
                   <div className={`banner-content ${bannerContentClass}`} id={`content_${componentOptions.id}`}>
                     <Reveal keyframes={fadeInUpShorter} delay={200} duration={1000} triggerOnce>
-                      <>
+                      <div>
                         <h3 className="banner-subtitle" id={sub_title.id}>
                           {(!('link' in title) && !('link' in sub_title)) ? <span className="text-white-important">{sub_title.text}</span> : (('link' in sub_title) ? sub_title.link : button.link) ? <ALink href={('link' in sub_title) ? sub_title.link : button.link}>{sub_title.text}</ALink> : <span className="text-white-important">{sub_title.text}</span>}
                         </h3>
@@ -84,7 +84,7 @@ const Banners = ({ content }) => {
                         >
                           <span id={button.id}>{button.text}</span>
                         </ALink>
-                      </>
+                      </div>
                     </Reveal>
                   </div>
                 </div>

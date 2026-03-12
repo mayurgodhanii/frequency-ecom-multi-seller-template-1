@@ -9,7 +9,7 @@ import ShopListOne from "~/components/partials/shop/list/shop-list-one";
 import Pagination from "~/components/features/pagination";
 import ShopSidebarOne from "~/components/partials/shop/sidebar/shop-sidebar-one";
 import { apirequest } from "~/utils/api";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import { getToken } from "~/utils/api";
 import { Helmet } from "react-helmet";
 import { fetchPageData } from "~/api/fetchPageData";
@@ -40,9 +40,9 @@ function ShopGrid() {
   const perPage = 9;
   const currentPage = parseInt(router.query.page) || 1;
   const spaceName = Cookies.get("spaceName");
-  const { data, isLoading, isError, error } = useQuery(
-    ["products", category, currentPage],
-    async () => {
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["products", category, currentPage],
+    queryFn: async () => {
       const primaryApiUrl = `/user/product-list?page=${currentPage}&size=${perPage}&category=${category}`;
       const fallbackApiUrl = `/user/products-list?page=${currentPage}&size=${perPage}&category=${category}`;
       const token = getToken();
@@ -61,15 +61,13 @@ function ShopGrid() {
       );
       return response;
     },
-    {
-      enabled: !!category,
-      staleTime: 300000,
-      retry: 1,
-      onError: (error) => {
-        console.error("Error fetching products:", error);
-      },
-    }
-  );
+    enabled: !!category,
+    staleTime: 300000,
+    retry: 1,
+    onError: (error) => {
+      console.error("Error fetching products:", error);
+    },
+  });
 
   const totalCount = data?.data?.totalItems || 0;
 

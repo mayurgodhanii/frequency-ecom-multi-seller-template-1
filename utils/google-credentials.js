@@ -7,14 +7,15 @@ export const fetchGoogleCredentials = async () => {
   try {
     const response = await apirequest("GET", `/user/google-list`, null, null);
 
-    if (response && response.success) {
+    if (response && response.success && response.data) {
       return response.data;
     } else {
-      throw new Error(response?.message || "Error fetching Google credentials");
+      console.warn("Google credentials not available:", response?.message || "No data returned");
+      return null; // Return null instead of throwing error
     }
   } catch (error) {
     console.error("API Error:", error);
-    throw error;
+    return null; // Return null instead of throwing error
   }
 };
 

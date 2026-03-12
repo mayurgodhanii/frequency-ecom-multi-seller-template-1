@@ -1,14 +1,80 @@
 
-import { Magnifier } from 'react-image-magnifiers';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import LightBox from 'react-image-lightbox';
+
+// React 19 compatible wrapper for Magnifier
+const MagnifierWrapper = React.memo(({ imageSrc, imageAlt, largeImageSrc, ...props }) => {
+    const [MagnifierComponent, setMagnifierComponent] = useState(null);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+        // Dynamically import and handle potential React 19 compatibility issues
+        const loadMagnifier = async () => {
+            try {
+                const { Magnifier } = await import('react-image-magnifiers');
+                setMagnifierComponent(() => Magnifier);
+            } catch (err) {
+                console.warn('Failed to load Magnifier component:', err);
+                setError(true);
+            }
+        };
+
+        loadMagnifier();
+    }, []);
+
+    if (error || !MagnifierComponent) {
+        // Fallback to regular image if Magnifier fails to load
+        return (
+            <div className="magnifier-fallback" style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <img 
+                    src={imageSrc} 
+                    alt={imageAlt}
+                    style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover',
+                        cursor: 'zoom-in'
+                    }}
+                />
+            </div>
+        );
+    }
+
+    try {
+        return (
+            <MagnifierComponent
+                imageSrc={imageSrc}
+                imageAlt={imageAlt}
+                largeImageSrc={largeImageSrc}
+                {...props}
+            />
+        );
+    } catch (err) {
+        console.warn('Magnifier component error:', err);
+        // Fallback to regular image
+        return (
+            <div className="magnifier-fallback" style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <img 
+                    src={imageSrc} 
+                    alt={imageAlt}
+                    style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover',
+                        cursor: 'zoom-in'
+                    }}
+                />
+            </div>
+        );
+    }
+});
 
 function GalleryDefault({ product, adClass = "product-gallery-vertical" }) {
     const [isOpen, setIsOpen] = useState(false);
     const [photoIndex, setPhotoIndex] = useState(0);
 
     useEffect(() => {
-        if (product) {
+        if (product && product.image && product.image.length > 0) {
             setIsOpen(false);
             setPhotoIndex(0);
             
@@ -27,11 +93,15 @@ function GalleryDefault({ product, adClass = "product-gallery-vertical" }) {
     }, [product, product?.image]);
 
     function moveNextPhoto() {
-        setPhotoIndex((photoIndex + 1) % product.image.length);
+        if (product?.image?.length) {
+            setPhotoIndex((photoIndex + 1) % product.image.length);
+        }
     }
 
     function movePrevPhoto() {
-        setPhotoIndex((photoIndex + product.image.length - 1) % product.image.length);
+        if (product?.image?.length) {
+            setPhotoIndex((photoIndex + product.image.length - 1) % product.image.length);
+        }
     }
 
     function openLightBox() {
@@ -54,8 +124,8 @@ function GalleryDefault({ product, adClass = "product-gallery-vertical" }) {
         e.currentTarget.classList.add('active');
     }
 
-    if (!product) {
-        return <div></div>;
+    if (!product || !product.image || !Array.isArray(product.image) || product.image.length === 0) {
+        return <div className="product-gallery-placeholder">No images available</div>;
     }
 
     return (
@@ -66,7 +136,7 @@ function GalleryDefault({ product, adClass = "product-gallery-vertical" }) {
                         {product.is_sale_product && <span className="product-label label-sale">Sale</span>}
                         {product.stock === 0 && <span className="product-label label-out">Out of Stock</span>}
 
-                        <Magnifier
+                        <MagnifierWrapper
                             imageSrc={product.image[0]}
                             imageAlt="product"
                             largeImageSrc={product.image[0]}
@@ -99,7 +169,7 @@ function GalleryDefault({ product, adClass = "product-gallery-vertical" }) {
                 </div>
             </div>
 
-            {isOpen && (
+            {isOpen && product?.image?.length > 0 && (
                 <LightBox
                     mainSrc={product.image[photoIndex]}
                     nextSrc={product.image[(photoIndex + 1) % product.image.length]}

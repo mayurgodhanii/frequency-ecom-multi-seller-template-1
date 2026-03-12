@@ -9,7 +9,7 @@ import {
 import ALink from "~/components/features/alink";
 import { useRouter } from "next/router";
 import { GoogleLogin } from "@react-oauth/google";
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import {
   fetchGoogleCredentials,
   decryptGoogleCredentials,
@@ -294,7 +294,7 @@ const handleRegisterSubmit = (e) => {
 
     try {
       const token = response.credential;
-      const decoded = jwt_decode(token);
+      const decoded = jwtDecode(token);
 
       await loginRequest({
         email: decoded.email,

@@ -1,6 +1,6 @@
 import React from "react";
 import { useRouter } from "next/router";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import Breadcrumb from "~/components/partials/product/breadcrumb";
 import GalleryDefault from "~/components/partials/product/gallery/gallery-default";
@@ -35,7 +35,9 @@ const fetchProduct = async (slug) => {
 };
 
 export const useProduct = (slug) => {
-  return useQuery(["product", slug], () => fetchProduct(slug), {
+  return useQuery({
+    queryKey: ["product", slug],
+    queryFn: () => fetchProduct(slug),
     enabled: !!slug,
     retry: 1,
     staleTime: 300000,
@@ -69,7 +71,9 @@ const fetchRelatedProducts = async (slug) => {
 };
 
 export const useRelatedProducts = (slug) => {
-  return useQuery(["relatedProducts", slug], () => fetchRelatedProducts(slug), {
+  return useQuery({
+    queryKey: ["relatedProducts", slug],
+    queryFn: () => fetchRelatedProducts(slug),
     enabled: !!slug,
     retry: 1,
     staleTime: 300000,
