@@ -91,6 +91,13 @@ function MobileMenu() {
                             )}
                         </SlideToggle>
 
+                        {/* Become a Seller Button in Mobile Menu */}
+                        <li className="mobile-become-seller">
+                            <ALink href="/store-registration" className="become-seller-mobile-link">
+                                <i className="icon-store"></i>
+                                <span>Become a Seller</span>
+                            </ALink>
+                        </li>
 
                     </ul>
                 </nav>

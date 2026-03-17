@@ -1,17 +1,18 @@
 import Link from "next/link";
 
-export default function ALink ( { children, className, style, ...props } ) {
+export default function ALink ( { children, className, style, href, ...props } ) {
     function defaultFunction ( e ) {
-        if ( props.href == '#' ) {
+        if ( href == '#' || !href ) {
             e.preventDefault();
         }
     }
 
+    // Provide a fallback href if undefined
+    const safeHref = href || '#';
+
     return (
-        <Link { ...props }>
-            <a className={ className } style={ style } onClick={ defaultFunction }>
-                { children }
-            </a>
+        <Link href={safeHref} className={ className } style={ style } onClick={ defaultFunction } {...props}>
+            { children }
         </Link>
     )
 }

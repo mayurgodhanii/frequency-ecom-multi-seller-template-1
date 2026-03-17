@@ -18,26 +18,29 @@ function CartMenu(props) {
   }, [props.cartlist]);
 
   const fetchCartList = async () => {
-    setLoading(true);
+    const token = getToken();
+    
+    // Don't call API if no token (user not logged in)
+    if (!token || token === "null") {
+      setCartList([]);
+      return;
+    }
+    
+    setLo
+    ;
     setError(null);
     try {
-      const token = getToken();
-      let url = "";
-      const params = {};
-
-      if (!token || token === "null") {
-        const cartUniId = localStorage.getItem("cart_uni_id") || "";
-        url = `/user/carts-list`;
-        params.cart_uni_id = cartUniId;
-      } else {
-        url = `/user/cart-list`;
-        params.couponId = "";
-      }
+      const url = `/cart/list`;
+      const params = {
+        couponId: "",
+      };
 
       const response = await apirequest("GET", url, null, params);
 
       if (response.success) {
-        setCartList(response.data || []);
+        // Extract the actual cart items from the nested data structure
+        const cartItems = response.data?.data || [];
+        setCartList(cartItems);
       } else {
         throw new Error("Failed to fetch cart list");
       }
@@ -48,27 +51,34 @@ function CartMenu(props) {
     }
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      props.updateCart(cartList);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [cartList]);
+  // Remove automatic cart updates - only update when user explicitly changes quantities
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     props.updateCart(cartList);
+  //   }, 400);
+  //   return () => clearTimeout(timer);
+  // }, [cartList]);
 
   const handleMouseEnter = () => {
-    if (!loading) {
+    const token = getToken();
+    
+    // Only fetch cart if user is logged in
+    if (token && token !== "null" && !loading) {
       fetchCartList();
     }
   };
 
   const getItemPrice = (item) => {
-    return currency === "USD" ? item.selected_variant_usd_price : item.selected_variant_price;
+    if (currency === "USD") {
+      return item.selected_variant_usd_price || item.usd_price || item.price || 0;
+    }
+    return item.selected_variant_price || item.price || 0;
   };
 
   const getTotalPrice = () => {
     return cartList.reduce((acc, item) => {
-      const price = currency === "USD" ? item.selected_variant_usd_price : item.selected_variant_price;
-      return acc + item.quantity * price;
+      const price = getItemPrice(item);
+      return acc + (item.quantity * price);
     }, 0);
   };
 
@@ -107,8 +117,8 @@ function CartMenu(props) {
                 <div className="product justify-content-between" key={index}>
                   <div className="product-cart-details">
                     <h4 className="product-title">
-                      <ALink href={`/product/${item.product_id}`}>
-                        {item?.productDetails?.name || item?.name}
+                      <ALink href={`/product/${item.product?.slug || item.product_id}`}>
+                        {item?.product?.name || item?.name || 'Product'}
                       </ALink>
                     </h4>
                     <span className="cart-product-info">
@@ -121,11 +131,11 @@ function CartMenu(props) {
 
                   <figure className="product-image-container ml-2">
                     <ALink
-                      href={`/product/${item.product_id}`}
+                      href={`/product/${item.product?.slug || item.product_id}`}
                       className="product-image"
                     >
                       <img
-                        src={item?.productDetails?.image?.[0] || item?.image?.[0]}
+                        src={item?.product?.image?.[0] || item?.image?.[0] || '/images/placeholder.jpg'}
                         alt="product"
                       />
                     </ALink>

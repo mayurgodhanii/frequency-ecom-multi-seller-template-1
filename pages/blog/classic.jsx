@@ -1,4 +1,4 @@
-import { useLazyQuery } from '@apollo/react-hooks';
+import { useLazyQuery } from '@apollo/client';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
 import StickyBox from 'react-sticky-box';

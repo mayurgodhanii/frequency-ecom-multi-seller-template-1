@@ -3,9 +3,6 @@ import React, { useEffect } from "react";
 import DynamicComponent from "~/components/DynamicComponent";
 
 const Brands = ({ content }) => {
-  // Log contents for debugging
-  
-
   useEffect(() => {
     countTo();
   }, []);
@@ -40,54 +37,54 @@ const Brands = ({ content }) => {
     (item) => !usedIds.has(item.component?.options?.id)
   );
 
-  // Log dynamic components
-  
-
   return (
-    <div className="container" id={content?.id}>
-      <div className="row">
-        <div className="col-lg-10 offset-lg-1">
-          <div className="brands-text text-center mx-auto mb-6">
-            {title && (
-              <h2 className="title" id={title.component.options.id}>
-                {title.component.components[0]?.options.text}
-              </h2>
-            )}
-            {description && (
-              <p id={description.component.options.id}>
-                {description.component.components[0]?.options.text}
-              </p>
-            )}
+    <div className=" py-8" id={content?.id}>
+      <div className="container brands-section">
+        <div className="row align-items-center">
+          {/* Left side - Content */}
+          <div className="col-lg-5 col-md-6 mb-4 mb-md-0">
+            <div className="brands-content">
+              {title && (
+                <h2 className="brands-title mb-3" id={title.component.options.id}>
+                  {title.component.components[0]?.options.text}
+                </h2>
+              )}
+              {description && (
+                <p className="brands-description" id={description.component.options.id}>
+                  {description.component.components[0]?.options.text}
+                </p>
+              )}
+            </div>
           </div>
-          <div className="brands-display">
-            <div className="row justify-content-center">
+          
+          {/* Right side - Brands Grid */}
+          <div className="col-lg-7 col-md-6">
+            <div className="brands-grid">
               {brands.slice(0, 8).map((brand, index) => (
-                <div className="col-6 col-sm-4 col-md-3" key={index}>
-                  <div className="brand" id={brand.id}>
-                    <img
-                      src={brand.image}
-                      alt="Brand Name"
-                      width={brand.width}
-                      height={brand.height}
-                      id={brand.imageId}
-                    />
-                  </div>
+                <div className="brand-item" key={index} id={brand.id}>
+                  <img
+                    src={brand.image}
+                    alt="Brand"
+                    className="brand-logo"
+                    id={brand.imageId}
+                  />
                 </div>
               ))}
             </div>
           </div>
-          {/* Render dynamic components */}
-          {dynamicComponents.length > 0 && (
-            <div className="dynamic-components">
-              {dynamicComponents.map((item, idx) => (
-                <DynamicComponent
-                  key={item.component?.options?.id || `dynamic-${idx}`}
-                  component={item.component}
-                />
-              ))}
-            </div>
-          )}
         </div>
+        
+        {/* Render dynamic components */}
+        {dynamicComponents.length > 0 && (
+          <div className="dynamic-components mt-4">
+            {dynamicComponents.map((item, idx) => (
+              <DynamicComponent
+                key={item.component?.options?.id || `dynamic-${idx}`}
+                component={item.component}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

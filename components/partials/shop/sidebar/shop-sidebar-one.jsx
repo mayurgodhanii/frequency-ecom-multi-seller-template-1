@@ -62,11 +62,12 @@ function ShopSidebarOne(props) {
   useEffect(() => {
     const fetchBrands = async () => {
       try {
-        const response = await apirequest("GET", `/user/brand-list`);
+        const response = await apirequest("GET", "/brand/list", null, {
+        });
         if (response.success) {
-          const brandList = response.data.data.map((item) => ({
+          const brandList = response.data.map((item) => ({
             id: item.id,
-            slug: item.name.toLowerCase(),
+            slug: item.name.toLowerCase().replace(/\s+/g, '-'),
             brand: item.name,
           }));
           setBrands(brandList);
@@ -83,20 +84,20 @@ function ShopSidebarOne(props) {
   const handlePriceChange = (value) => {
     setRange(value);
 
-    const currentBrands = query.brand ? query.brand.split(",") : [];
+    const currentBrands = query.brand ? query.brand.split(",").map(Number) : [];
     onFilterChange({
       minPrice: value.min,
       maxPrice: value.max,
-      brands: currentBrands,
+      brand_ids: currentBrands,
     });
   };
 
-  const handleBrandChange = (slug) => {
-    const updatedBrands = query.brand ? query.brand.split(",") : [];
-    const index = updatedBrands.indexOf(slug);
+  const handleBrandChange = (brandId) => {
+    const updatedBrands = query.brand ? query.brand.split(",").map(Number) : [];
+    const index = updatedBrands.indexOf(brandId);
 
     if (index === -1) {
-      updatedBrands.push(slug);
+      updatedBrands.push(brandId);
     } else {
       updatedBrands.splice(index, 1);
     }
@@ -112,7 +113,7 @@ function ShopSidebarOne(props) {
     onFilterChange({
       minPrice: priceRange.min,
       maxPrice: priceRange.max,
-      brands: updatedBrands.length > 0 ? updatedBrands : [],
+      brand_ids: updatedBrands.length > 0 ? updatedBrands : [],
     });
   };
 
@@ -201,9 +202,9 @@ function ShopSidebarOne(props) {
                             id={`brand-${item.id}`}
                             checked={
                               query.brand &&
-                              query.brand.split(",").includes(item.slug)
+                              query.brand.split(",").map(Number).includes(item.id)
                             }
-                            onChange={() => handleBrandChange(item.slug)}
+                            onChange={() => handleBrandChange(item.id)}
                           />
                           <label
                             className="custom-control-label"

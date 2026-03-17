@@ -9,7 +9,7 @@ import Layout from "../components/layout";
 import { actions as demoAction } from "../store/demo";
 import "~/public/scss/plugins/owl-carousel/owl.carousel.scss";
 import "~/public/scss/style.scss";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
 import {
   fetchGoogleCredentials,
@@ -111,6 +111,12 @@ const WrappedApp = ({ Component, pageProps }) => {
     const getGoogleCredentials = async () => {
       try {
         const response = await fetchGoogleCredentials();
+        
+        if (!response) {
+          console.warn("Google credentials not available");
+          return;
+        }
+        
         const encryptedData = response;
         const decryptedData = await decryptGoogleCredentials(
           encryptedData,
@@ -159,7 +165,7 @@ const WrappedApp = ({ Component, pageProps }) => {
       try {
         const response = await apirequest(
           "GET",
-          `/user/space-meta`,
+          `/space-meta`,
           null,
           null
         );
@@ -210,7 +216,7 @@ const WrappedApp = ({ Component, pageProps }) => {
       try {
         const response = await apirequest(
           "GET",
-          `/user/space-web-expiry`,
+          `/space-web-expiry`,
           null,
           null
         );

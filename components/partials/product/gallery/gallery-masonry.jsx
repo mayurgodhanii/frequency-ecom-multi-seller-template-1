@@ -1,6 +1,69 @@
-import { Magnifier } from 'react-image-magnifiers';
 import React, { useState, useEffect } from 'react';
 import LightBox from 'react-image-lightbox';
+
+// React 19 compatible wrapper for Magnifier
+const MagnifierWrapper = React.memo(({ imageSrc, imageAlt, largeImageSrc, ...props }) => {
+    const [MagnifierComponent, setMagnifierComponent] = useState(null);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+        const loadMagnifier = async () => {
+            try {
+                const { Magnifier } = await import('react-image-magnifiers');
+                setMagnifierComponent(() => Magnifier);
+            } catch (err) {
+                console.warn('Failed to load Magnifier component:', err);
+                setError(true);
+            }
+        };
+
+        loadMagnifier();
+    }, []);
+
+    if (error || !MagnifierComponent) {
+        return (
+            <div className="magnifier-fallback" style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <img 
+                    src={imageSrc} 
+                    alt={imageAlt}
+                    style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover',
+                        cursor: 'zoom-in'
+                    }}
+                />
+            </div>
+        );
+    }
+
+    try {
+        return (
+            <MagnifierComponent
+                imageSrc={imageSrc}
+                imageAlt={imageAlt}
+                largeImageSrc={largeImageSrc}
+                {...props}
+            />
+        );
+    } catch (err) {
+        console.warn('Magnifier component error:', err);
+        return (
+            <div className="magnifier-fallback" style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <img 
+                    src={imageSrc} 
+                    alt={imageAlt}
+                    style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover',
+                        cursor: 'zoom-in'
+                    }}
+                />
+            </div>
+        );
+    }
+});
 
 function GalleryMasonry ( props ) {
     const { product } = props;
@@ -80,10 +143,10 @@ function GalleryMasonry ( props ) {
                                 : ""
                         }
 
-                        <Magnifier
+                        <MagnifierWrapper
                             imageSrc={ process.env.NEXT_PUBLIC_ASSET_URI + product.pictures[ 0 ].url }
                             imageAlt="product"
-                            largeImageSrc={ process.env.NEXT_PUBLIC_ASSET_URI + product.pictures[ 0 ].url } // Optional
+                            largeImageSrc={ process.env.NEXT_PUBLIC_ASSET_URI + product.pictures[ 0 ].url }
                             dragToMove={ false }
                             mouseActivation="hover"
                             cursorStyleActive="crosshair"

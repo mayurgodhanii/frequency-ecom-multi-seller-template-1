@@ -5,7 +5,7 @@ import ALink from "~/components/features/alink";
 import PageHeader from "~/components/features/page-header";
 import { logout } from "~/store/authReducer";
 import { connect } from "react-redux";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import Pagination from "~/components/features/pagination";
 import { apirequest } from "~/utils/api";
 import { toast } from "react-toastify";
@@ -180,15 +180,15 @@ function DashBoard(logout) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await apirequest("GET", "/user/profile", null, null);
+        const response = await apirequest("GET", "/users/profile", null, null);
 
         if (response.success) {
           const userData = {
-            name: response.data.name || "",
-            email: response.data.email || "",
-            date_of_birth: response.data.date_of_birth || "",
-            gender: response.data.gender || "",
-            phone: response.data.phone || "",
+            name: response.user.name || "",
+            email: response.user.email || "",
+            date_of_birth: response.user.date_of_birth || "",
+            gender: response.user.gender || "",
+            phone: response.user.phone || "",
           };
 
           localStorage.setItem("userData", JSON.stringify(userData));
@@ -210,7 +210,7 @@ function DashBoard(logout) {
     e.preventDefault();
 
     try {
-      const response = await apirequest("PUT", "/user/profile", {
+      const response = await apirequest("PUT", "/users/profile", {
         name: userData.name,
         date_of_birth: userData.date_of_birth,
         phone: userData.phone,
@@ -318,11 +318,11 @@ function DashBoard(logout) {
     return response;
   };
 
-  const { data, isLoading, isError, refetch } = useQuery(
-    ["orders", parseInt(page)],
-    fetchOrders,
-    { keepPreviousData: true }
-  );
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["orders", parseInt(page)],
+    queryFn: fetchOrders,
+    keepPreviousData: true,
+  });
 
   const formatOrderStatus = (status) => {
     return status

@@ -30,26 +30,25 @@ const spaceName = Cookies.get("spaceName");
       try {
         const token = props.token;
 
-
-        let url = "";
-        const params = {};
-
+        // Redirect to login if no token (multivendor requires authentication)
         if (!token || token === "null") {
-          const cartUniId = localStorage.getItem("cart_uni_id") || "";
-
-          url = `/user/carts-list`;
-          params.couponId = "";
-          params.cart_uni_id = cartUniId;
-        } else {
-          url = `/user/cart-list`;
-          params.couponId = "";
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
+          return;
         }
+
+        const url = `/cart/list`;
+        const params = {
+          couponId: ""        };
 
         const response = await apirequest("GET", url, null, params);
 
         if (response.success) {
-          setCartList(response.data || []);
-          setResponse(response || []);
+          // Extract cart items from nested data structure
+          const cartItems = response.data?.data || [];
+          setCartList(cartItems);
+          setResponse(response.data || {});
         } else {
           throw new Error("Failed to fetch cart list");
         }
@@ -71,7 +70,9 @@ const spaceName = Cookies.get("spaceName");
     const updatedItem = {
       cart_id: cartList[index].id,
       quantity: value,
-      variant: cartList[index].variant,
+      variant: cartList[index].variant || {},
+      selected_variant_price: cartList[index].selected_variant_price,
+      selected_variant_usd_price: cartList[index].selected_variant_usd_price
     };
 
     setCartList(
@@ -95,19 +96,15 @@ const spaceName = Cookies.get("spaceName");
       });
   }
 
-  const updateCartAPI = async (cartItems) => {
+  const updateCartAPI = async (cartItem) => {
     const token = props.token;
 
+    if (!token || token === "null") {
+      throw new Error("Authentication required");
+    }
+
     try {
-      let url = "";
-
-      if (!token || token === "null") {
-        url = "/user/carts-edit";
-      } else {
-        url = "/user/cart-edit";
-      }
-
-      const response = await apirequest("POST", url, cartItems);
+      const response = await apirequest("PUT", "/cart/update-quantity", cartItem);
       return response;
     } catch (error) {
       console.error("Update cart API error:", error.message || error);
@@ -128,13 +125,14 @@ const spaceName = Cookies.get("spaceName");
     }, 400);
   }
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      props.updateCart(cartList);
-    }, 400);
+  // Remove automatic cart updates - only update when user explicitly changes quantities
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     props.updateCart(cartList);
+  //   }, 400);
 
-    return () => clearTimeout(timer);
-  }, [cartList]);
+  //   return () => clearTimeout(timer);
+  // }, [cartList]);
 
   if (loading) {
     return <div><Loader /></div>;
@@ -194,9 +192,9 @@ const spaceName = Cookies.get("spaceName");
                                   <div className="product-image">
                                     <img
                                       src={
-                                        item?.productDetails?.image[0] ||
-                                        item?.images[0] ||
-                                        null
+                                        item?.product?.image?.[0] ||
+                                        item?.images?.[0] ||
+                                        '/images/placeholder.jpg'
                                       }
                                       alt="product"
                                     />
@@ -205,7 +203,7 @@ const spaceName = Cookies.get("spaceName");
 
                                 <div className="product-info">
                                   <h4 className="product-title">
-                                    <div>{item?.productDetails?.name}</div>
+                                    <div>{item?.product?.name || item?.name || 'Product'}</div>
                                   </h4>
 
                                   {/* <h4 className="product-variant">
@@ -377,13 +375,19 @@ const spaceName = Cookies.get("spaceName");
                           <td>Subtotal:</td>
                           <td>
                             {getCurrencySymbol(currency)}
-                            {cartPriceTotal(cartList).toLocaleString(
-                              undefined,
-                              {
+                            {(() => {
+                              const subtotal = cartList.reduce((acc, item) => {
+                                const isUSD = currency === 'USD';
+                                const price = isUSD 
+                                  ? (item.selected_variant_usd_price || item.usd_price || 0)
+                                  : (item.selected_variant_price || item.price || 0);
+                                return acc + (price * item.quantity);
+                              }, 0);
+                              return subtotal.toLocaleString(undefined, {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2,
-                              }
-                            )}
+                              });
+                            })()}
                           </td>
                         </tr>
                         <tr className="summary-shipping">
@@ -396,28 +400,31 @@ const spaceName = Cookies.get("spaceName");
                           <td>Total:</td>
                           <td>
                             {getCurrencySymbol(currency)}
-                            {(
-                              cartPriceTotal(cartList) + shippingCost
-                            ).toLocaleString(undefined, {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
+                            {(() => {
+                              const subtotal = cartList.reduce((acc, item) => {
+                                const isUSD = currency === 'USD';
+                                const price = isUSD 
+                                  ? (item.selected_variant_usd_price || item.usd_price || 0)
+                                  : (item.selected_variant_price || item.price || 0);
+                                return acc + (price * item.quantity);
+                              }, 0);
+                              const total = subtotal + shippingCost;
+                              return total.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              });
+                            })()}
                           </td>
                         </tr>
                       </tbody>
                     </table>
-                    <button
-                      onClick={updateCart}
-                      className="  btn-order btn-block"
+                    <ALink
+                      href="/shop/checkout"
+                      className="btn btn-outline-primary-2 btn-order btn-block"
                     >
-                      <ALink
-                        href="/shop/checkout"
-                        className="btn btn-outline-primary-2"
-                      >
-                        PROCEED TO CHECKOUT
-                        <i className="icon-refresh"></i>
-                      </ALink>
-                    </button>
+                      PROCEED TO CHECKOUT
+                      <i className="icon-long-arrow-right"></i>
+                    </ALink>
                   </div>
                   <ALink
                     href="/"

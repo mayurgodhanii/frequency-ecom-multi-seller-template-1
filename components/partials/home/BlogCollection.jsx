@@ -4,7 +4,7 @@ import OwlCarousel from "~/components/features/owl-carousel";
 import PostFour from "~/components/features/posts/post-four";
 
 import { fadeIn, blogSlider } from "~/utils/data";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { apirequest } from "~/utils/api";
 
 function BlogCollection({ content, className = "", style = {} }) {
@@ -39,6 +39,28 @@ function BlogCollection({ content, className = "", style = {} }) {
     fetchBlogs();
   }, []);
 
+  // Memoize the carousel content to prevent unnecessary re-renders
+  const carouselContent = useMemo(() => {
+    if (loading || posts.length === 0) {
+      return [0, 1, 2, 3, 4].map((item, index) => (
+        <div className="skel-pro" key={`skeleton-${index}`}></div>
+      ));
+    }
+
+    return posts.map((item, index) => (
+      <div key={`post-${item.id || index}`}>
+        <Reveal
+          keyframes={fadeIn}
+          delay={100}
+          duration={1000}
+          triggerOnce
+        >
+          <PostFour post={item} />
+        </Reveal>
+      </div>
+    ));
+  }, [loading, posts]);
+
   return (
     <section
       className={`blog-posts ${className}`}
@@ -48,33 +70,13 @@ function BlogCollection({ content, className = "", style = {} }) {
       <div className="container-fluid">
         <h2 className="title text-center mb-3">From Our Blog</h2>
 
-        {loading || posts.length === 0 ? (
-          <OwlCarousel
-            adClass="owl-simple carousel-with-shadow cols-lg-3 cols-sm-2 cols-1"
-            options={blogSlider}
-          >
-            {[0, 1, 2, 3, 4].map((item, index) => (
-              <div className="skel-pro" key={index}></div>
-            ))}
-          </OwlCarousel>
-        ) : (
-          <OwlCarousel
-            adClass="owl-simple pb-3 carousel-with-shadow cols-lg-3 cols-sm-2 cols-1"
-            options={blogSlider}
-          >
-            {posts.map((item, index) => (
-              <Reveal
-                keyframes={fadeIn}
-                delay={100}
-                duration={1000}
-                triggerOnce
-                key={index}
-              >
-                <PostFour post={item} />
-              </Reveal>
-            ))}
-          </OwlCarousel>
-        )}
+        <OwlCarousel
+          adClass={`owl-simple pb-3 carousel-with-shadow cols-lg-3 cols-sm-2 cols-1 ${loading ? 'loading' : 'loaded'}`}
+          options={blogSlider}
+          key={`carousel-${loading ? 'loading' : 'loaded'}-${posts.length}`}
+        >
+          {carouselContent}
+        </OwlCarousel>
 
         <div className="text-center mb-7 mt-2">
           <ALink

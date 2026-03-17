@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useQuery } from '@apollo/react-hooks';
+import { useQuery } from '@apollo/client';
 import StickyBox from 'react-sticky-box';
 
 import withApollo from '~/server/apollo';

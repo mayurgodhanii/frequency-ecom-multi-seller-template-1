@@ -1,6 +1,6 @@
 import React from "react";
 import { Helmet } from "react-helmet";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import ALink from "~/components/features/alink";
 import PageHeader from "~/components/features/page-header";
 import Loader from "~/components/Loader";

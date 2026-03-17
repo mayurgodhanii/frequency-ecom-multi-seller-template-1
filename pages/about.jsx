@@ -1,7 +1,7 @@
 import dynamic from "next/dynamic";
 import React from "react";
 import { Helmet } from "react-helmet";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import ALink from "~/components/features/alink";
 import PageHeader from "~/components/features/page-header";
 import Loader from "~/components/Loader";
@@ -15,13 +15,20 @@ const AboutContent = dynamic(() => import("~/components/partials/about/about-con
 const Features = dynamic(() => import("~/components/partials/about/features"), {
   ssr: true,
 });
-const Statistics = dynamic(() => import("~/components/partials/about/statistics"), {
-  ssr: true,
-});
+
 const OurTeam = dynamic(() => import("~/components/partials/about/OurTeam"), {
   ssr: true,
 });
 const Brands = dynamic(() => import("~/components/partials/about/brands"), {
+  ssr: true,
+});
+const OurVision = dynamic(() => import("~/components/partials/about/our-vision"), {
+  ssr: true,
+});
+const WhoWeAre = dynamic(() => import("~/components/partials/about/who-we-are"), {
+  ssr: true,
+});
+const Testimonials = dynamic(() => import("~/components/partials/about/Customerstestimonial"), {
   ssr: true,
 });
 
@@ -62,11 +69,24 @@ function About2() {
   const jsonData = data;
   const pageData = jsonData.data[0]?.web_json?.page_data || [];
   const pageTitle = jsonData.data[0]?.web_json?.page_title || "About Us";
+   const pageSubtitle =
+    jsonData.data[0]?.web_json?.sub_title || "Keep in touch with us";
+  const headerImage =
+    jsonData.data[0]?.web_json?.image_url || "images/contact-header-bg.jpg";
 const spaceName = Cookies.get("spaceName");
 
 
   const contentMap = {};
-  const knownComponents = ["about-content", "features", "statistics", "OurTeam", "brands"];
+  const knownComponents = [
+    "about-content", 
+    "features", 
+    "statistics", 
+    "OurTeam", 
+    "brands", 
+    "Our-Vision", 
+    "Who-We-Are", 
+    "Testimonials"
+  ];
   const dynamicSections = [];
 
   pageData.forEach((section) => {
@@ -85,12 +105,16 @@ const spaceName = Cookies.get("spaceName");
         return <AboutContent content={content} />;
       case "features":
         return <Features content={content} />;
-      case "statistics":
-        return <Statistics content={content} />;
       case "OurTeam":
         return <OurTeam content={content} />;
       case "brands":
         return <Brands content={content} />;
+      case "Our-Vision":
+        return <OurVision content={content} />;
+      case "Who-We-Are":
+        return <WhoWeAre content={content} />;
+      case "Testimonials":
+        return <Testimonials content={content} />;
       default:
         return null;
     }
@@ -110,9 +134,9 @@ const spaceName = Cookies.get("spaceName");
         <title>{`${pageTitle} | ${spaceName}` || "template"}</title>
       </Helmet>
 
-      <PageHeader title={pageTitle} />
+      {/* <PageHeader title={pageTitle} /> */}
       <nav className="breadcrumb-nav">
-        <div className="container">
+        <div className="container-fluid">
           <ol className="breadcrumb">
             <li className="breadcrumb-item">
               <ALink href="/">Home</ALink>
@@ -125,13 +149,40 @@ const spaceName = Cookies.get("spaceName");
         </div>
       </nav>
 
+
+        <div className="container-fluid">
+        <div
+          className="page-header page-header-big text-center"
+          style={{ backgroundImage: `url(${headerImage})` }}
+        >
+          <h1 className="page-title text-white">
+            {pageTitle} <span className="text-white">{pageSubtitle}</span>
+          </h1>
+        </div>
+      </div>
+
       <div className="page-content pb-3">
-        <div className="container">
-          {Object.keys(contentMap).map((component, index) => (
-            <div key={index}>{renderComponent(component, contentMap[component])}</div>
-          ))}
-          {/* Render top-level dynamic sections */}
-          {dynamicSections.length > 0 && (
+        {Object.keys(contentMap).map((component, index) => {
+          // Render WhoWeAre and Testimonials with full-width background
+          if (component === "Who-We-Are" || component === "Testimonials") {
+            return (
+              <div key={index} className="full-width-section">
+                {renderComponent(component, contentMap[component])}
+              </div>
+            );
+          }
+          
+          // Render other components inside container-fluid
+          return (
+            <div key={index} className="container-fluid">
+              {renderComponent(component, contentMap[component])}
+            </div>
+          );
+        })}
+        
+        {/* Render top-level dynamic sections */}
+        {dynamicSections.length > 0 && (
+          <div className="container-fluid">
             <div className="dynamic-sections">
               {dynamicSections.map((section, idx) => (
                 <DynamicComponent
@@ -140,8 +191,8 @@ const spaceName = Cookies.get("spaceName");
                 />
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

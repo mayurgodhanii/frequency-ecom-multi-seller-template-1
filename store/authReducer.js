@@ -109,7 +109,13 @@ const authReducer = (state = initialState, action) => {
 // API Functions
 const registerApi = async (data) => {
   try {
-    const response = await apirequest("POST", `/user/register`, data, null);
+    const payload = {
+      name: data.name,
+      email: data.email,
+      password: data.password,
+    };
+    
+    const response = await apirequest("POST", `/users/register`, payload, null);
     return response;
   } catch (error) {
     console.error("Error in register API:", error);
@@ -119,7 +125,12 @@ const registerApi = async (data) => {
 
 const loginApi = async (data) => {
   try {
-    const response = await apirequest("POST", `/user/login`, data, null);
+    const payload = {
+      email: data.email,
+      password: data.password,
+    };
+    
+    const response = await apirequest("POST", `/users/login`, payload, null);
     return response;
   } catch (error) {
     console.error("Error in login API:", error);
@@ -129,7 +140,7 @@ const loginApi = async (data) => {
 
 const logoutApi = async (token) => {
   try {
-      const response = await apirequest("POST", `/user/logout`, null, null, {
+      const response = await apirequest("POST", `/users/logout`, null, null, {
         headers: { "x-access-token": token },
       });
     return response;
@@ -312,17 +323,23 @@ function* loginSaga(action) {
           data.message ||
             "Your wholesale account is still under review. Please wait for approval."
         );
+        yield put({ type: LOGIN_FAILURE, payload: null });
         return;                     // stop saga – no token, no login
       }
 
       // ---- NORMAL LOGIN (retail or approved wholesale) ----
+      // Use 'token' field from new API response
+      const tokenValue = data.token || data.accessToken || null;
+      
       yield put({
         type: LOGIN_SUCCESS,
-        payload: { token: data.accessToken, user: data.user },
+        payload: { token: tokenValue, user: data.user },
       });
       yield call(toast.success, data?.message || "Login successful!");
-        Cookies.set("wholesale_status", data?.wholesale_status);
-
+      
+      if (data.wholesale_status) {
+        Cookies.set("wholesale_status", data.wholesale_status);
+      }
     }
     // -------------------------------------------------
     // 2. FAILURE RESPONSE

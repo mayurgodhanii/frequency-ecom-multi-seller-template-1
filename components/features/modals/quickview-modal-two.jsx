@@ -1,13 +1,77 @@
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { Magnifier } from 'react-image-magnifiers';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@apollo/react-hooks';
-import { useRouter } from 'next/router';
 
 import OwlCarousel from '~/components/features/owl-carousel';
 import DetailOne from '~/components/partials/product/details/detail-one';
+
+// React 19 compatible wrapper for Magnifier
+const MagnifierWrapper = React.memo(({ imageSrc, imageAlt, largeImageSrc, ...props }) => {
+    const [MagnifierComponent, setMagnifierComponent] = useState(null);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+        const loadMagnifier = async () => {
+            try {
+                const { Magnifier } = await import('react-image-magnifiers');
+                setMagnifierComponent(() => Magnifier);
+            } catch (err) {
+                console.warn('Failed to load Magnifier component:', err);
+                setError(true);
+            }
+        };
+
+        loadMagnifier();
+    }, []);
+
+    if (error || !MagnifierComponent) {
+        return (
+            <div className="magnifier-fallback" style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <img 
+                    src={imageSrc} 
+                    alt={imageAlt}
+                    style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover',
+                        cursor: 'zoom-in'
+                    }}
+                />
+            </div>
+        );
+    }
+
+    try {
+        return (
+            <MagnifierComponent
+                imageSrc={imageSrc}
+                imageAlt={imageAlt}
+                largeImageSrc={largeImageSrc}
+                {...props}
+            />
+        );
+    } catch (err) {
+        console.warn('Magnifier component error:', err);
+        return (
+            <div className="magnifier-fallback" style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <img 
+                    src={imageSrc} 
+                    alt={imageAlt}
+                    style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover',
+                        cursor: 'zoom-in'
+                    }}
+                />
+            </div>
+        );
+    }
+});
+
+import { useQuery } from '@apollo/client';
+import { useRouter } from 'next/router';
 
 import withApollo from '~/server/apollo';
 import { GET_PRODUCT } from '~/server/queries';
@@ -140,10 +204,10 @@ function QuickViewModalTwo ( props ) {
                                                 }
                                                 <OwlCarousel adClass="product-gallery-carousel owl-full owl-nav-dark cols-1 cols-md-2 cols-lg-3" onChangeRef={ setCarouselRef } events={ events } options={ { 'dots': false, 'nav': false } }>
                                                     { product.pictures.map( ( item, index ) =>
-                                                        <Magnifier
+                                                        <MagnifierWrapper
                                                             imageSrc={ process.env.NEXT_PUBLIC_ASSET_URI + item.url }
                                                             imageAlt="product"
-                                                            largeImageSrc={ process.env.NEXT_PUBLIC_ASSET_URI + item.url } // Optional
+                                                            largeImageSrc={ process.env.NEXT_PUBLIC_ASSET_URI + item.url }
                                                             dragToMove={ false }
                                                             mouseActivation="hover"
                                                             cursorStyleActive="crosshair"

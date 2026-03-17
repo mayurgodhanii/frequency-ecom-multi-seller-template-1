@@ -32,41 +32,46 @@ function HeaderSearch() {
       setLoading(true);
       const timerId = setTimeout(async () => {
         try {
-          const auth = JSON.parse(localStorage.getItem("frequency-auth"));
-          const token = auth?.token ? auth.token.replace(/"/g, "") : null;
-
-          if (!token || token === "null") {
-            await fetchFallbackApi(searchTerm);
-            setLoading(false);
-            return;
-          }
+          const payload = {
+            search: searchTerm,
+            page: 1,
+            size: 10,
+            filter: {}
+          };
 
           const response = await apirequest(
-            "GET",
-            `/user/globel_search-product-list`,
-            null,
-            { page: 0, size: 100, search: searchTerm }
+            "POST",
+            `/product/global-search`,
+            payload
           );
 
           if (response.success) {
             const allItems = [];
-            if (
-              response.data.categories &&
-              response.data.categories.length > 0
-            ) {
-              allItems.push(...response.data.categories);
+            
+            // Add categories to results
+            if (response.data.categories && response.data.categories.length > 0) {
+              allItems.push(...response.data.categories.map(cat => ({
+                ...cat,
+                type: 'category'
+              })));
             }
-            if (response.data.products && response.data.products.length > 0) {
-              allItems.push(...response.data.products);
+            
+            // Add products to results
+            if (response.data.products && response.data.products.data && response.data.products.data.length > 0) {
+              allItems.push(...response.data.products.data.map(product => ({
+                ...product,
+                type: 'product'
+              })));
             }
+            
             setItems(allItems);
           } else {
             setItems([]);
             console.error("Error in response:", response.message);
           }
         } catch (error) {
-          console.error("Error fetching categories:", error);
-          await fetchFallbackApi(searchTerm);
+          console.error("Error fetching search results:", error);
+          setItems([]);
         }
         setLoading(false);
         setTimer(timerId);
@@ -76,33 +81,6 @@ function HeaderSearch() {
       setLoading(false);
     }
   }, [searchTerm]);
-
-  const fetchFallbackApi = async (searchTerm) => {
-    try {
-      const response = await apirequest(
-        "GET",
-        `/user/globel_search-products-list`,
-        null,
-        { page: 0, size: 100, search: searchTerm}
-      );
-
-      if (response.success) {
-        const allItems = [];
-        if (response.data.categories && response.data.categories.length > 0) {
-          allItems.push(...response.data.categories);
-        }
-        if (response.data.products && response.data.products.length > 0) {
-          allItems.push(...response.data.products);
-        }
-        setItems(allItems);
-      } else {
-        setItems([]);
-      }
-    } catch (error) {
-      setItems([]);
-      console.error("Error fetching from fallback API:", error);
-    }
-  };
 
   function closeSearchForm() {
     document.querySelector(".header .header-search").classList.remove("show");
@@ -116,29 +94,20 @@ function HeaderSearch() {
     e.preventDefault();
     router.push({
       pathname: "/shop/list",
-      query: { searchTerm },
+      query: { search: searchTerm },
     });
   }
 
-  // function handleItemClick(item) {
-  //   // If it's a product, redirect to the product page
-  //   if (item.image && Array.isArray(item.image) && item.image.length > 0) {
-  //     router.push(`/product/${item.slug}`);
-  //   } else {
-  //     // If it's a category, redirect to the category page
-  //     router.push(`/shop/${item.slug}`);
-  //   }
-  // }
-
   function handleItemClick(item) {
-    if (item.image && Array.isArray(item.image) && item.image.length > 0) {
+    if (item.type === 'product') {
       router.push(`/product/${item.slug}`);
-    } else {
+    } else if (item.type === 'category') {
       router.push(`/shop/${item.slug}`);
     }
 
     setItems([]);
     setSearchTerm(item.name); 
+    closeSearchForm();
   }
 
   function clearSearch() {
@@ -147,7 +116,6 @@ function HeaderSearch() {
   }
 
   return (
-     <div className="header-one">
     <div className="header-search header-search-extended header-search-visible header-search-no-radius d-none d-lg-block">
       <button className="search-toggle">
         <i className="icon-search"></i>
@@ -160,6 +128,7 @@ function HeaderSearch() {
         onClick={() =>
           document.querySelector(".header .header-search").classList.add("show")
         }
+        style={{ width: '100%', flex: 1 }}
       >
         <div className="header-search-wrapper search-wrapper-wide position-relative">
           <input
@@ -198,7 +167,6 @@ function HeaderSearch() {
 
           {/* Suggestions Dropdown */}
           {searchTerm.length > 0 && (
-                 <div className="header-one">
             <div
               className="live-search-list position-absolute w-100"
               style={{ top: "100%", left: 0, zIndex: 10 }}
@@ -215,7 +183,7 @@ function HeaderSearch() {
                       className="autocomplete-suggestion d-flex align-items-center p-2"
                       onClick={() => handleItemClick(item)}
                     >
-                      {item.image ? (
+                      {item.type === 'product' && item.image ? (
                         <>
                           <LazyLoadImage
                             src={
@@ -227,11 +195,35 @@ function HeaderSearch() {
                             height={40}
                             alt={item.name}
                             className="mr-2"
+                            style={{ objectFit: 'cover', borderRadius: '4px' }}
                           />
-                          <div className="search-name">{item.name}</div>
+                          <div className="search-item-details">
+                            <div className="search-name font-weight-bold">{item.name}</div>
+                            <div className="search-type text-muted small">Product</div>
+                          </div>
+                        </>
+                      ) : item.type === 'category' && item.image ? (
+                        <>
+                          <LazyLoadImage
+                            src={item.image}
+                            width={40}
+                            height={40}
+                            alt={item.name}
+                            className="mr-2"
+                            style={{ objectFit: 'cover', borderRadius: '4px' }}
+                          />
+                          <div className="search-item-details">
+                            <div className="search-name font-weight-bold">{item.name}</div>
+                            <div className="search-type text-muted small">Category</div>
+                          </div>
                         </>
                       ) : (
-                        <div className="search-name">{item.name}</div>
+                        <div className="search-item-details">
+                          <div className="search-name font-weight-bold">{item.name}</div>
+                          <div className="search-type text-muted small">
+                            {item.type === 'product' ? 'Product' : 'Category'}
+                          </div>
+                        </div>
                       )}
                     </div>
                   ))
@@ -242,11 +234,9 @@ function HeaderSearch() {
                 )}
               </div>
             </div>
-            </div>
           )}
         </div>
       </form>
-    </div>
     </div>
   );
 }

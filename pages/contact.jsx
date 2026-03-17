@@ -2,7 +2,7 @@ import dynamic from "next/dynamic";
 import React from "react";
 import ALink from "~/components/features/alink";
 import { Helmet } from "react-helmet";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import Loader from "~/components/Loader";
 import { apirequest } from "~/utils/api";
 import DynamicComponent from "~/components/DynamicComponent";

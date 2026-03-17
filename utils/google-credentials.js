@@ -5,31 +5,50 @@ import { apirequest } from "~/utils/api";
 
 export const fetchGoogleCredentials = async () => {
   try {
-    const response = await apirequest("GET", `/user/google-list`, null, null);
+    const response = await apirequest("GET", `/users/google-list`, null, null);
 
-    if (response && response.success) {
+    if (response && response.success && response.data) {
       return response.data;
     } else {
-      throw new Error(response?.message || "Error fetching Google credentials");
+      console.warn("Google credentials not available:", response?.message || "No data returned");
+      return null; // Return null instead of throwing error
     }
   } catch (error) {
     console.error("API Error:", error);
-    throw error;
+    return null; // Return null instead of throwing error
   }
 };
 
 
 export const decryptGoogleCredentials = async (encryptedData, key) => {
-  const hashedKey = crypto.createHash("sha256").update(key).digest();
+  // Handle null, undefined, or empty encrypted data
+  if (!encryptedData || typeof encryptedData !== 'string') {
+    console.warn("No encrypted data provided for decryption");
+    return null;
+  }
 
-  const textParts = encryptedData.split(":");
-  const iv = Buffer.from(textParts[0], "hex");
-  const encryptedText = textParts[1];
+  try {
+    const hashedKey = crypto.createHash("sha256").update(key).digest();
 
-  const decipher = crypto.createDecipheriv("aes-256-cbc", hashedKey, iv);
+    const textParts = encryptedData.split(":");
+    
+    // Validate that we have both IV and encrypted text
+    if (textParts.length !== 2 || !textParts[0] || !textParts[1]) {
+      console.error("Invalid encrypted data format");
+      return null;
+    }
 
-  let decrypted = decipher.update(encryptedText, "hex", "utf8");
-  decrypted += decipher.final("utf8");
+    const iv = Buffer.from(textParts[0], "hex");
+    const encryptedText = textParts[1];
 
-  return decrypted;
+    const decipher = crypto.createDecipheriv("aes-256-cbc", hashedKey, iv);
+
+    let decrypted = decipher.update(encryptedText, "hex", "utf8");
+    decrypted += decipher.final("utf8");
+
+    return decrypted;
+  } catch (error) {
+    console.error("Decryption error:", error.message);
+    return null;
+  }
 };

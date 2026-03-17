@@ -9,8 +9,7 @@ import ShopListOne from "~/components/partials/shop/list/shop-list-one";
 import Pagination from "~/components/features/pagination";
 import ShopSidebarOne from "~/components/partials/shop/sidebar/shop-sidebar-one";
 import { apirequest } from "~/utils/api";
-import { useQuery } from "react-query";
-import { getToken } from "~/utils/api";
+import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import { fetchPageData } from "~/api/fetchPageData";
 import Loader from "~/components/Loader";
@@ -21,10 +20,11 @@ function ShopGrid() {
   const { category, search } = router.query;
 
   const [pageTitle, setPageTitle] = useState("");
+  const [categoryData, setCategoryData] = useState(null);
 
   useEffect(() => {
     const handleRouteChange = () => {
-      const newTitle = category.split("-")[0];
+      const newTitle = category ? category.split("-")[0] : "";
       setPageTitle(newTitle);
     };
     handleRouteChange(router.asPath);
@@ -32,44 +32,61 @@ function ShopGrid() {
     return () => {
       router.events.off("routeChangeComplete", handleRouteChange);
     };
-  }, [router]);
+  }, [router, category]);
+
+  // Fetch category data to get category ID and name
+  useEffect(() => {
+    const fetchCategoryData = async () => {
+      if (category) {
+        try {
+          const response = await apirequest("GET", "/category/list", null, {
+          });
+          if (response.success) {
+            // Find category by slug or name
+            const foundCategory = response.data.find(cat => 
+              cat.slug === category || 
+              cat.name.toLowerCase().replace(/\s+/g, '-') === category ||
+              cat.id.toString() === category
+            );
+            setCategoryData(foundCategory);
+          }
+        } catch (error) {
+          console.error("Error fetching category data:", error);
+        }
+      }
+    };
+    fetchCategoryData();
+  }, [category]);
   const [toggle, setToggle] = useState(false);
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [products, setProducts] = useState([]);
 
   const perPage = 9;
   const currentPage = parseInt(router.query.page) || 1;
   const spaceName = Cookies.get("spaceName");
-  const { data, isLoading, isError, error } = useQuery(
-    ["products", category, currentPage],
-    async () => {
-      const primaryApiUrl = `/user/product-list?page=${currentPage}&size=${perPage}&category=${category}`;
-      const fallbackApiUrl = `/user/products-list?page=${currentPage}&size=${perPage}&category=${category}`;
-      const token = getToken();
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["products", category, currentPage, categoryData?.id],
+    queryFn: async () => {
+      const categoryId = categoryData?.id || category;
+      const requestData = {
+        type: "top_deals", // You can make this dynamic based on category type
+        search: search || "",
+        page: currentPage,
+        size: perPage,
+        filter: {
+          category_id: categoryId ? [categoryId] : [],
+        }
+      };
 
-      if (!token || token === "null") {
-        const response = await apirequest("GET", fallbackApiUrl);
-        return response;
-      }
-
-      const response = await apirequest(
-        "GET",
-        primaryApiUrl,
-        null,
-        null,
-        token
-      );
+      const response = await apirequest("POST", "/product/list", requestData);
       return response;
     },
-    {
-      enabled: !!category,
-      staleTime: 300000,
-      retry: 1,
-      onError: (error) => {
-        console.error("Error fetching products:", error);
-      },
-    }
-  );
+    enabled: !!category,
+    staleTime: 300000,
+    retry: 1,
+    onError: (error) => {
+      console.error("Error fetching products:", error);
+    },
+  });
 
   const totalCount = data?.data?.totalItems || 0;
 
@@ -92,38 +109,32 @@ function ShopGrid() {
   }, []);
 
   const fetchFilteredProducts = async (filters) => {
-    const apiUrl = "/user/filter-product-list";
-    const fallbackApiUrl = "/user/search-products-list";
-    const token = getToken();
-
-    const filterData = {
+    const categoryId = categoryData?.id || category;
+    const requestData = {
+      type: "top_deals",
+      search: search || "",
+      page: 1,
+      size: perPage,
       filter: {
         price: {
           min: filters.minPrice || 0,
           max: filters.maxPrice || 99999,
         },
-        category: data?.data?.data[0]?.category
-          ? [data.data.data[0].category]
-          : [2],
-        brand: filters.brands || [],
+        category_id: categoryId ? [categoryId] : [],
+        brand_id: filters.brand_ids || [],
       },
     };
 
-    // Always send filter data, even when using the fallback API
-    const requestData = token === "null" || !token ? filterData : filterData;
-    const url = token === "null" || !token ? fallbackApiUrl : apiUrl;
-
     try {
-      const response = await apirequest("POST", url, requestData);
+      const response = await apirequest("POST", "/product/list", requestData);
       if (response.success) {
         if (
           filters.minPrice === 0 &&
           filters.maxPrice === 99999 &&
-          filters.brands.length === 0
+          (!filters.brand_ids || filters.brand_ids.length === 0)
         ) {
-          setProducts(data?.data?.data);
+          setProducts(data?.data?.data || []);
         } else {
-          setFilteredProducts(response.data.data);
           setProducts(response.data.data);
         }
       }
@@ -167,10 +178,10 @@ function ShopGrid() {
         <meta name="description" content={metaData?.description || "list"} />
 
 
-        <title>{`${category.split("-")[0]} | ${spaceName}` || "template"}</title>
+        <title>{`${categoryData?.name || pageTitle || "Category"} | ${spaceName}` || "template"}</title>
       </Helmet>
 
-       <PageHeader title={products.length > 0 ? products[0].category_name : "Category"} subTitle="Shop" />
+       <PageHeader title={categoryData?.name || pageTitle || "Category"} subTitle="Shop" />
       <nav className="breadcrumb-nav mb-2">
         <div className="container">
           <ol className="breadcrumb">
@@ -180,7 +191,7 @@ function ShopGrid() {
             <li className="breadcrumb-item">
               <ALink href="/shop/list">Shop</ALink>
             </li>
-            <li className="breadcrumb-item active">{products.length > 0 ? products[0].category_name : "Category"}</li>
+            <li className="breadcrumb-item active">{categoryData?.name || pageTitle || "Category"}</li>
             {search && (
               <li className="breadcrumb-item">
                 <span>Search - {search}</span>

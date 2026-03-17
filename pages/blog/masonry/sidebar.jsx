@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useLazyQuery } from '@apollo/react-hooks';
+import { useLazyQuery } from '@apollo/client';
 import { useEffect, useRef, useState } from 'react';
 import imagesLoaded from 'imagesloaded';
 import StickyBox from 'react-sticky-box';

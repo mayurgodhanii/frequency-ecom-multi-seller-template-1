@@ -1,17 +1,6 @@
-// import { withApollo } from 'next-apollo';
-// import ApolloClient, { InMemoryCache } from 'apollo-boost';
-
-// const API_URI = `${process.env.NEXT_PUBLIC_SERVER_URL}/graphql`;
-
-// const apolloClient = new ApolloClient( {
-//     uri: API_URI,
-//     cache: new InMemoryCache()
-// } );
-
-// export default withApollo( apolloClient );
-
-import { withApollo } from 'next-apollo';
 import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
+import { ApolloProvider } from '@apollo/client';
+import React from 'react';
 
 const API_URI = `${process.env.NEXT_PUBLIC_SERVER_URL}/graphql`;
 
@@ -20,10 +9,31 @@ const httpLink = createHttpLink({
   uri: API_URI,
 });
 
-// Set up the Apollo Client
+// Create Apollo Client instance
 const apolloClient = new ApolloClient({
   link: httpLink,
   cache: new InMemoryCache(),
+  ssrMode: typeof window === 'undefined',
 });
 
-export default withApollo(apolloClient);
+// Create a withApollo HOC for backward compatibility
+export const withApollo = (options = {}) => (Component) => {
+  const WithApolloComponent = (props) => {
+    return (
+      <ApolloProvider client={apolloClient}>
+        <Component {...props} />
+      </ApolloProvider>
+    );
+  };
+
+  WithApolloComponent.displayName = `withApollo(${Component.displayName || Component.name})`;
+  
+  // Copy static methods
+  if (Component.getInitialProps) {
+    WithApolloComponent.getInitialProps = Component.getInitialProps;
+  }
+  
+  return WithApolloComponent;
+};
+
+export default withApollo;

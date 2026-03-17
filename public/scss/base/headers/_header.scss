@@ -872,9 +872,9 @@
 }
 
 .header-search-extended {
-  margin-right: 19rem;
+  margin-right: 0;
   width: 100%;
-  max-width: 570px;
+  max-width: none;
   margin-top: 2.2rem;
   margin-bottom: 2.2rem;
 
@@ -1034,9 +1034,9 @@
     }
 
     .header-center {
-      flex-grow: 0;
-      flex-shrink: 0;
-      flex-basis: calc((100% + 20px) / 2 - 20px);
+      flex-grow: 1;
+      flex-shrink: 1;
+      flex-basis: auto;
       margin: 0;
     }
 
@@ -1359,7 +1359,7 @@
   }
 
   .header-search-extended {
-    margin-right: 10rem;
+    margin-right: 0;
 
     .btn {
       flex: 0 0 50px;

@@ -1,6 +1,6 @@
 import React from "react";
 import { useRouter } from "next/router";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import Breadcrumb from "~/components/partials/product/breadcrumb";
 import GalleryDefault from "~/components/partials/product/gallery/gallery-default";
@@ -16,8 +16,8 @@ import Cookies from "js-cookie";
 const fetchProduct = async (slug) => {
   const auth = JSON.parse(localStorage.getItem("frequency-auth"));
   const token = auth?.token;
-  const primaryApiUrl = `/user/product/${slug}`;
-  const fallbackApiUrl = `/user/products/${slug}`;
+  const primaryApiUrl = `/product/details/${slug}`;
+  const fallbackApiUrl = `/product/details/${slug}`;
 
   if (token === "null" || !token) {
     return await apirequest("GET", fallbackApiUrl);
@@ -35,7 +35,9 @@ const fetchProduct = async (slug) => {
 };
 
 export const useProduct = (slug) => {
-  return useQuery(["product", slug], () => fetchProduct(slug), {
+  return useQuery({
+    queryKey: ["product", slug],
+    queryFn: () => fetchProduct(slug),
     enabled: !!slug,
     retry: 1,
     staleTime: 300000,
@@ -46,30 +48,28 @@ export const useProduct = (slug) => {
 };
 
 const fetchRelatedProducts = async (slug) => {
-  const auth = JSON.parse(localStorage.getItem("frequency-auth"));
-  const token = auth?.token;
+  const primaryApiUrl = `/product/recommend/${slug}`;
+  const fallbackApiUrl = `/product/recommend/${slug}`;
 
-  const primaryApiUrl = `/user/recommand-productId-list?product_id=${slug}&page=0&size=5&search=`;
-  const fallbackApiUrl = `/user/recommand-productsId-list?product_id=${slug}&page=0&size=5&search=`;
-
-  if (token === "null" || !token) {
-    // console.error("Token is invalid or missing, using fallback API.");
-    return await apirequest("GET", fallbackApiUrl);
-  }
+  const payload = {
+    search: "",
+    page: 1,
+    size: 5,
+  };
 
   try {
-    return await apirequest("GET", primaryApiUrl, null, {
-      "x-access-token": token.replace(/"/g, ""),
-    });
+    return await apirequest("POST", primaryApiUrl, payload);
   } catch (error) {
     console.error("Error in primary API, falling back to secondary:", error);
 
-    return await apirequest("GET", fallbackApiUrl);
+    return await apirequest("POST", fallbackApiUrl, payload);
   }
 };
 
 export const useRelatedProducts = (slug) => {
-  return useQuery(["relatedProducts", slug], () => fetchRelatedProducts(slug), {
+  return useQuery({
+    queryKey: ["relatedProducts", slug],
+    queryFn: () => fetchRelatedProducts(slug),
     enabled: !!slug,
     retry: 1,
     staleTime: 300000,
@@ -150,32 +150,17 @@ function ProductDefault() {
       return;
     }
 
-    // Find the matching combination - try multiple key variations
+    // Find the matching combination
     const matchingCombination = combinations.find(combo => {
       console.log('Checking combination:', combo);
       
-      // Try different possible keys (case-insensitive)
-      const possibleKeys = [
-        primaryOptionName,
-        primaryOptionName.toLowerCase(),
-        primaryOptionName + 's', // plural
-        primaryOptionName.toLowerCase() + 's', // plural lowercase
-        primaryOptionName.slice(0, -1), // singular (remove 's')
-        'colors', // common key
-        'color'   // common key
-      ];
+      // Check if the combination matches the selected color
+      const comboValue = combo[primaryOptionName.toLowerCase()];
+      console.log(`Checking ${primaryOptionName.toLowerCase()}:`, comboValue);
       
-      for (const key of possibleKeys) {
-        const comboValue = combo[key];
-        console.log(`Trying key "${key}":`, comboValue);
-        
-        if (comboValue) {
-          // Compare case-insensitively
-          if (comboValue.toLowerCase() === selectedValue.toLowerCase()) {
-            console.log('✓ Match found with key:', key);
-            return true;
-          }
-        }
+      if (comboValue && comboValue.toLowerCase() === selectedValue.toLowerCase()) {
+        console.log('✓ Match found');
+        return true;
       }
       
       return false;
@@ -183,21 +168,21 @@ function ProductDefault() {
 
     console.log('Matching combination:', matchingCombination);
 
-    // Update images if combination has images, otherwise use default
-    if (matchingCombination?.image && Array.isArray(matchingCombination.image) && matchingCombination.image.length > 0) {
-      console.log('✓ Setting images from combination:', matchingCombination.image);
-      
-      // Clean up image URLs (remove encoded quotes if present)
-      const cleanedImages = matchingCombination.image.map(img => 
-        typeof img === 'string' ? img.replace(/%22/g, '').replace(/"/g, '') : img
-      );
-      
-      console.log('Cleaned images:', cleanedImages);
-      setCurrentImages(cleanedImages);
-    } else {
-      console.log('No images in combination, using default product images');
-      setCurrentImages(product.image);
+    // Update images if combination has variants with images
+    if (matchingCombination?.variants && Array.isArray(matchingCombination.variants)) {
+      // Look for images in any variant of this combination
+      for (const variant of matchingCombination.variants) {
+        if (variant.image && Array.isArray(variant.image) && variant.image.length > 0) {
+          console.log('✓ Setting images from variant:', variant.image);
+          setCurrentImages(variant.image);
+          return;
+        }
+      }
     }
+    
+    // If no variant images found, use default product images
+    console.log('No variant images found, using default product images');
+    setCurrentImages(product.image);
   };
 
 

@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/react-hooks';
+import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/router';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { connect } from 'react-redux';

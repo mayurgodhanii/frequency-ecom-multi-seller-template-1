@@ -954,3 +954,25 @@ export const blogSlider = {
         }
     }
 }
+
+export const testiSlider = {
+    nav: false,
+    dots: true,
+    items: 1,
+    margin: 20,
+    loop: true,
+    autoHeight: true,
+    autoplay: false,
+    responsive: {
+        0: {
+            items: 1
+        },
+        768: {
+            items: 1
+        },
+        992: {
+            items: 1,
+            dots: true
+        }
+    }
+}

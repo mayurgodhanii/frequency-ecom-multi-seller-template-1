@@ -25,7 +25,6 @@ function Checkout(props) {
   const [loading, setLoading] = useState(false);
   const [cartList, setCartList] = useState([]);
   const [countryList, setCountryList] = useState([]);
-
   const spaceName = Cookies.get("spaceName");
   const [error, setError] = useState(null);
   const [appliedCouponId, setAppliedCouponId] = useState(null);
@@ -36,23 +35,24 @@ function Checkout(props) {
       try {
         const token = getToken();
 
-        let url = "";
-        const params = {};
-
+        // Redirect to login if no token (multivendor requires authentication)
         if (!token || token === "null") {
-          const cartUniId = localStorage.getItem("cart_uni_id") || "";
-          url = `/user/carts-list`;
-          params.cart_uni_id = cartUniId;
-          params.couponId = appliedCouponId || "";
-        } else {
-          url = `/user/cart-list`;
-          params.couponId = appliedCouponId || "";
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
+          return;
         }
+
+        const url = `/cart/list`;
+        const params = {
+          couponId: appliedCouponId || ""
+        };
 
         const response = await apirequest("GET", url, null, params);
 
         if (response.success) {
-          setCartList(response || []);
+          // Extract cart data from nested structure
+          setCartList(response.data || {});
         } else {
           throw new Error("Failed to fetch cart list");
         }
@@ -358,54 +358,55 @@ function Checkout(props) {
       const orderResponse =
         token && token !== "null"
           ? await apirequest("POST", "/user/create-order", {
+              type: "razorPay",
+              name: `${data.firstName} ${data.lastName}`,
+              // dial_code: "+91", // Default to +91, you may want to make this dynamic based on country
+              phone: data.phone,
               amount: cartList?.finalPriceSum,
               usd_amount: cartList?.finalUsdPriceSum,
-              type: "razorPay",
-              address: userAddress,
-              phone: data.phone,
               couponId: appliedCouponId,
+              address: userAddress,
+              currency: currency || "INR",
               country: data.country,
               pincode: data.zip,
               charges: {
-                taxation: cartList?.taxation,
-                inr_tax: cartList?.inr_tax,
-                usd_tax: cartList?.usd_tax,
-                delivery: cartList?.delivery,
-                usd_delivery: cartList?.usd_delivery,
+                shipping: cartList?.delivery || 0,
+                tax: cartList?.inr_tax || 0,
+                discount: cartList?.discount || 0,
               },
               product_details: cartList?.data.map((item) => ({
-                product_id: item.product_id,
+                product_id: item.product_id || item.product?.id,
+                name: item.product?.name || item.name || 'Product',
                 quantity: item.quantity,
-                variant: item.variant,
-                price: item.selected_variant_price,
-                usd_price: item.selected_variant_usd_price,
+                price: item.selected_variant_price || item.price,
+                variant: item.variant || null,
               })),
             })
-          : await apirequest("POST", `/user/create-orders`, {
+          : await apirequest("POST", "/user/create-order", {
               type: "razorPay",
+              name: `${data.firstName} ${data.lastName}`,
+              // dial_code: "+91", // Default to +91, you may want to make this dynamic based on country
+              phone: data.phone,
               amount: cartList?.finalPriceSum,
               usd_amount: cartList?.finalUsdPriceSum,
               address: userAddress,
               couponId: appliedCouponId,
-              cart_uni_id: localStorage.getItem("cart_uni_id") || "",
-              email: data.email,
-              name: `${data.firstName} ${data.lastName}`,
-              phone: data.phone,
+              currency: currency || "INR",
               country: data.country,
               pincode: data.zip,
+              email: data.email,
+              cart_uni_id: localStorage.getItem("cart_uni_id") || "",
               charges: {
-                taxation: cartList?.taxation,
-                inr_tax: cartList?.inr_tax,
-                usd_tax: cartList?.usd_tax,
-                delivery: cartList?.delivery,
-                usd_delivery: cartList?.usd_delivery,
+                shipping: cartList?.delivery || 0,
+                tax: cartList?.inr_tax || 0,
+                discount: cartList?.discount || 0,
               },
               product_details: cartList?.data.map((item) => ({
-                product_id: item.product_id,
+                product_id: item.product_id || item.product?.id,
+                name: item.product?.name || item.name || 'Product',
                 quantity: item.quantity,
-                variant: item.variant,
-                price: item.selected_variant_price,
-                usd_price: item.selected_variant_usd_price,
+                price: item.selected_variant_price || item.price,
+                variant: item.variant || null,
               })),
             });
 
@@ -416,9 +417,9 @@ function Checkout(props) {
         setLoading(false);
         return;
       }
-      if (!orderResponse.data.success)
+      if (!orderResponse.success)
         throw new Error("Failed to create order");
-      const { order_id } = orderResponse.data;
+      const { order_id } = orderResponse;
       setOrderId(order_id);
 
       const options = {
@@ -440,9 +441,7 @@ function Checkout(props) {
 
           const verificationResult = await apirequest(
             "POST",
-            token && token !== "null"
-              ? "/user/verify-payment"
-              : "/user/verify-payments",
+            "/user/verify-payment",
             paymentData
           );
 
@@ -475,16 +474,20 @@ function Checkout(props) {
     try {
       const orderData = {
         type: "payPal",
+        name: `${data.firstName} ${data.lastName}`,
+        // dial_code: "+91", // Default to +91, you may want to make this dynamic based on country
+        phone: data.phone,
         amount: cartList?.finalPriceSum,
         usd_amount: cartList?.finalUsdPriceSum,
         address: userAddress,
         couponId: appliedCouponId,
+        currency: currency || "INR",
         product_details: cartList?.data.map((item) => ({
-          product_id: item.product_id,
+          product_id: item.product_id || item.product?.id,
+          name: item.product?.name || item.name || 'Product',
           quantity: item.quantity,
-          variant: item.variant,
-          price: item.selected_variant_price,
-          usd_price: item.selected_variant_usd_price,
+          price: item.selected_variant_price || item.price,
+          variant: item.variant || null,
         })),
       };
 
@@ -492,32 +495,25 @@ function Checkout(props) {
         token && token !== "null"
           ? await apirequest("POST", "/user/create-order", {
               ...orderData,
-              phone: data.phone,
               country: data.country,
               pincode: data.zip,
               charges: {
-                taxation: cartList?.taxation,
-                inr_tax: cartList?.inr_tax,
-                usd_tax: cartList?.usd_tax,
-                delivery: cartList?.delivery,
-                usd_delivery: cartList?.usd_delivery,
+                shipping: cartList?.delivery || 0,
+                tax: cartList?.inr_tax || 0,
+                discount: cartList?.discount || 0,
               },
             })
-          : await apirequest("POST", "/user/create-orders", {
+          : await apirequest("POST", "/user/create-order", {
               ...orderData,
               email: data.email,
-              name: `${data.firstName} ${data.lastName}`,
-              phone: data.phone,
               country: data.country,
               pincode: data.zip,
-              charges: {
-                taxation: cartList?.taxation,
-                inr_tax: cartList?.inr_tax,
-                usd_tax: cartList?.usd_tax,
-                delivery: cartList?.delivery,
-                usd_delivery: cartList?.usd_delivery,
-              },
               cart_uni_id: localStorage.getItem("cart_uni_id") || "",
+              charges: {
+                shipping: cartList?.delivery || 0,
+                tax: cartList?.inr_tax || 0,
+                discount: cartList?.discount || 0,
+              },
             });
 
       if (
@@ -528,9 +524,9 @@ function Checkout(props) {
         return;
       }
 
-      if (!orderResponse.data.success)
+      if (!orderResponse.success)
         throw new Error("Failed to create order");
-      const orderID = orderResponse.data.order_id;
+      const orderID = orderResponse.order_id;
 
       if (paypalSdkLoaded) {
         window.paypal_sdk
@@ -554,9 +550,7 @@ function Checkout(props) {
 
               const result = await apirequest(
                 "POST",
-                token && token !== "null"
-                  ? "/user/verify-payment"
-                  : "/user/verify-payments",
+                "/user/verify-payment",
                 paymentData
               );
 
@@ -592,51 +586,47 @@ function Checkout(props) {
 
     try {
       const orderData = {
+        type: "cod",
+        name: `${data.firstName} ${data.lastName}`,
+        // dial_code: "+91", // Default to +91, you may want to make this dynamic based on country
+        phone: data.phone,
         amount: cartList?.finalPriceSum,
         usd_amount: cartList?.finalUsdPriceSum,
-        type: "cod",
         currency: currency,
         address: userAddress,
         couponId: appliedCouponId,
         product_details: cartList?.data.map((item) => ({
-          product_id: item.product_id,
+          product_id: item.product_id || item.product?.id,
+          name: item.product?.name || item.name || 'Product',
           quantity: item.quantity,
-          variant: item.variant,
-          price: item.selected_variant_price,
-          usd_price: item.selected_variant_usd_price,
+          price: item.selected_variant_price || item.price,
+          variant: item.variant || null,
         })),
       };
 
       let response;
       if (!token || token === "null") {
-        response = await apirequest("POST", "/user/create-orders", {
+        response = await apirequest("POST", "/user/create-order", {
           ...orderData,
           email: data.email,
-          name: `${data.firstName} ${data.lastName}`,
-          phone: data.phone,
           country: data.country,
           pincode: data.zip,
           charges: {
-            taxation: cartList?.taxation,
-            inr_tax: cartList?.inr_tax,
-            usd_tax: cartList?.usd_tax,
-            delivery: cartList?.delivery,
-            usd_delivery: cartList?.usd_delivery,
+            shipping: cartList?.delivery || 0,
+            tax: cartList?.inr_tax || 0,
+            discount: cartList?.discount || 0,
           },
           cart_uni_id: localStorage.getItem("cart_uni_id") || "",
         });
       } else {
         response = await apirequest("POST", "/user/create-order", {
           ...orderData,
-          phone: data.phone,
           country: data.country,
           pincode: data.zip,
           charges: {
-            taxation: cartList?.taxation,
-            inr_tax: cartList?.inr_tax,
-            usd_tax: cartList?.usd_tax,
-            delivery: cartList?.delivery,
-            usd_delivery: cartList?.usd_delivery,
+            shipping: cartList?.delivery || 0,
+            tax: cartList?.inr_tax || 0,
+            discount: cartList?.discount || 0,
           },
         });
       }
@@ -652,8 +642,8 @@ function Checkout(props) {
         throw new Error("Invalid API response");
       }
 
-      if (!response.data.success) {
-        throw new Error(response.data.message || "Failed to create order");
+      if (!response.success) {
+        throw new Error(response.message || "Failed to create order");
       }
 
       toast.success("Order placed successfully!");
@@ -678,8 +668,8 @@ function Checkout(props) {
     formState: { errors },
   } = useForm();
 
-  const addAddress = async (data) => {
-    const newAddress = {
+  const addOrUpdateAddress = async (data) => {
+    const addressData = {
       name: `${data.firstName} ${data.lastName}`,
       address: data.addressLine1,
       city: data.city,
@@ -689,23 +679,35 @@ function Checkout(props) {
     };
 
     try {
-      const response = await apirequest(
-        "POST",
-        "/user/address-add",
-        newAddress
-      );
+      let response;
+      
+      // If address exists, update it; otherwise, create new one
+      if (address && address.id) {
+        response = await apirequest(
+          "PUT",
+          `/user/address-edit/${address.id}`,
+          addressData
+        );
+      } else {
+        response = await apirequest(
+          "POST",
+          "/user/address-add",
+          addressData
+        );
+      }
+      
       if (response.success) {
         localStorage.setItem("userAddress", JSON.stringify(response.data));
         setAddress(response.data);
+        return true;
       } else {
         toast.error("Failed to save address");
         return false;
       }
     } catch (error) {
-      console.error("Error adding address:", error);
+      console.error("Error adding/updating address:", error);
       return false;
     }
-    return true;
   };
 
   const onSubmit = async (data) => {
@@ -722,9 +724,18 @@ function Checkout(props) {
       } else if (paymentMethod === "cod") {
         await handleCODPayment(data);
       }
-      // addAddress(data);
+      // Only create address if user is authenticated and has no existing addresses
       if (token !== "null" && token !== undefined) {
-        addAddress(data);
+        // Check if user has any addresses
+        try {
+          const addressResponse = await apirequest("GET", "/user/address-list");
+          if (addressResponse.success && addressResponse.data.length === 0) {
+            // Only create address if user has no addresses at all
+            addOrUpdateAddress(data);
+          }
+        } catch (error) {
+          console.error("Error checking addresses:", error);
+        }
       }
     } catch (error) {
       console.error("Payment processing failed:", error);
@@ -1209,7 +1220,7 @@ function Checkout(props) {
                         {cartList?.data?.map((item, index) => (
                           <tr key={index}>
 
-                            <td>{item?.productDetails?.name}</td>
+                            <td>{item?.product?.name || item?.name || 'Product'}</td>
                             <td>
                               {getCurrencySymbol(currency || 'USD')}
                               {item.total_price.toLocaleString(undefined, {

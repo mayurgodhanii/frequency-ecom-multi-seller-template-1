@@ -33,7 +33,6 @@ function PostThree ( props ) {
                                 height="auto"
                             />
                         </ALink>
-                        }
                     </figure>
                     :
                     <figure className="entry-media" style={ { paddingTop: `${post.image[ 0 ].height / post.image[ 0 ].width * 100}%` } }>

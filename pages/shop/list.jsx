@@ -9,7 +9,7 @@ import ShopListOne from "~/components/partials/shop/list/shop-list-one";
 import Pagination from "~/components/features/pagination";
 import ShopSidebarOne from "~/components/partials/shop/sidebar/shop-sidebar-one";
 import { apirequest } from "~/utils/api";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import { getToken } from "~/utils/api";
 import Helmet from "react-helmet";
 import { fetchPageData } from "~/api/fetchPageData";
@@ -40,36 +40,28 @@ function ShopGrid() {
   const perPage = 9;
   const currentPage = parseInt(router.query.page) || 1;
 
-  const { data, isLoading, isError, error } = useQuery(
-    ["products", currentPage],
-    async () => {
-      const primaryApiUrl = `/user/product-list?page=${currentPage}&size=${perPage}&category=`;
-      const fallbackApiUrl = `/user/products-list?page=${currentPage}&size=${perPage}&category=`;
-      const token = getToken();
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["products", currentPage, router.query.category],
+    queryFn: async () => {
+      const requestData = {
+        type: "", // Allow dynamic type from URL
+        search: router.query.search || "",
+        page: currentPage,
+        size: perPage,
+        filter: {
+          category: router.query.category ? [router.query.category] : [],
+        }
+      };
 
-      if (!token || token === "null") {
-        const response = await apirequest("GET", fallbackApiUrl);
-        return response;
-      }
-
-      const response = await apirequest(
-        "GET",
-        primaryApiUrl,
-        null,
-        null,
-        token
-      );
+      const response = await apirequest("POST", "/product/list", requestData);
       return response;
     },
-    {
-      //   enabled: !!category,
-      staleTime: 300000,
-      retry: 1,
-      onError: (error) => {
-        console.error("Error fetching products:", error);
-      },
-    }
-  );
+    staleTime: 300000,
+    retry: 1,
+    onError: (error) => {
+      console.error("Error fetching products:", error);
+    },
+  });
 
   const totalCount = data?.data?.totalItems || 0;
 
@@ -90,35 +82,32 @@ function ShopGrid() {
   }, []);
 
    const fetchFilteredProducts = async (filters) => {
-      const apiUrl = "/user/filter-product-list";
-      const fallbackApiUrl = "/user/search-products-list";
-      const token = getToken();
-  
-      const filterData = {
+      const requestData = {
+        type: "",
+        search: filters.search || "",
+        page: 1,
+        size: perPage,
         filter: {
           price: {
             min: filters.minPrice || 0,
             max: filters.maxPrice || 99999,
           },
-          category: [],
-          brand: filters.brands || [],
+          category_id: filters.categories || [],
+          brand_id: filters.brand_ids || [],
         },
       };
   
-      const requestData = filterData;
-      const url = token === "null" || !token ? fallbackApiUrl : apiUrl;
-  
       try {
-        const response = await apirequest("POST", url, requestData);
+        const response = await apirequest("POST", "/product/list", requestData);
         if (response.success) {
           if (
             filters.minPrice === 0 &&
             filters.maxPrice === 99999 &&
-            filters.brands.length === 0
+            (!filters.brand_ids || filters.brand_ids.length === 0) &&
+            (!filters.categories || filters.categories.length === 0)
           ) {
-            setProducts(data?.data?.data);
+            setProducts(data?.data?.data || []);
           } else {
-            setFilteredProducts(response.data.data);
             setProducts(response.data.data);
           }
         }
