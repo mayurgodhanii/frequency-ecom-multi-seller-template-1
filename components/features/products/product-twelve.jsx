@@ -58,14 +58,19 @@ function ProductTwelve(props) {
       product?.variant_json?.combinations &&
       product?.variant_json?.combinations.length > 0
     ) {
-      product.variant_json.combinations.forEach((comb) => {
-        comb?.variants?.forEach((variant) => {
-          const vPrice = getPrice(variant);
-          if (vPrice > 0) {
-            min = Math.min(min, vPrice);
-            max = Math.max(max, vPrice);
-          }
-        });
+      product.variant_json.combinations.forEach((combination) => {
+        const vPrice = isWholesale
+          ? currency === "INR"
+            ? parseFloat(combination.wholesale_price || combination.price || 0)
+            : parseFloat(combination.wholesale_usd_price || combination.usd_price || 0)
+          : currency === "INR"
+          ? parseFloat(combination.price || 0)
+          : parseFloat(combination.usd_price || 0);
+        
+        if (vPrice > 0) {
+          min = Math.min(min, vPrice);
+          max = Math.max(max, vPrice);
+        }
       });
     } else {
       // Simple product
@@ -213,11 +218,11 @@ function ProductTwelve(props) {
           <div className="ratings">
             <div
               className="ratings-val"
-              style={{ width: `${product.rating * 20}%` }}
+              style={{ width: `${(product.average_rating || product.rating || 0) * 20}%` }}
             ></div>
-            <span className="tooltip-text">{product.rating}</span>
+            <span className="tooltip-text">{product.average_rating || product.rating || 0}</span>
           </div>
-          <span className="ratings-text">({product.rating})</span>
+          <span className="ratings-text">({product.rating_count || 0})</span>
         </div>
       </div>
 

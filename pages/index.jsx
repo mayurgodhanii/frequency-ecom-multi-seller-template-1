@@ -7,12 +7,19 @@ import Loader from "~/components/Loader";
 
 // Dynamically import components
 const Banners = dynamic(() => import("~/components/partials/home/Banners"), { ssr: true });
+const Categories = dynamic(() => import("~/components/partials/home/Categories"), { ssr: true });
 const Services = dynamic(() => import("~/components/partials/home/services"), { ssr: true });
 const SpecialCollection = dynamic(() => import("~/components/partials/home/SpecialCollection"), { ssr: true });
 const TopCollection = dynamic(() => import("~/components/partials/home/TopCollection"), { ssr: true });
+const Highlights = dynamic(() => import("~/components/partials/home/Highlights"), { ssr: true });
+const BestSellingCollection = dynamic(() => import("~/components/partials/home/BestSellingCollection"), { ssr: true });
+const Banners2 = dynamic(() => import("~/components/partials/home/Banners2"), { ssr: true });
+const RewardsBanner = dynamic(() => import("~/components/partials/home/RewardsBanner"), { ssr: true });
+
 const BlogCollection = dynamic(() => import("~/components/partials/home/BlogCollection"), { ssr: true });
 const Customerstestimonial = dynamic(() => import("~/components/partials/home/Customerstestimonial"), { ssr: true });
 const Brands = dynamic(() => import("~/components/partials/home/Brands"), { ssr: true });
+const Stores = dynamic(() => import("~/components/partials/home/Stores"), { ssr: true });
 
 function Home() {
   const { data: pageData, isLoading } = useQuery({
@@ -34,6 +41,19 @@ function Home() {
     switch (component.name) {
       case "Banners":
         return <Banners key={index} content={component.options} />;
+
+      case "Categories":
+        return (
+          <Reveal 
+            key={index} 
+            keyframes={fadeIn} 
+            // delay={200} 
+            // duration={1000} 
+            triggerOnce
+          >
+            <Categories content={component.options} />
+          </Reveal>
+        );
 
       case "services":
         return <Services key={index} content={component.options} />;
@@ -60,6 +80,54 @@ function Home() {
           </div>
         );
 
+      case "Highlights":
+        return (
+          <Reveal 
+            key={index} 
+            keyframes={fadeIn} 
+            // delay={200} 
+            // duration={1000} 
+            triggerOnce
+          >
+            <Highlights content={component.options} />
+          </Reveal>
+        );
+
+         case "BestSellingCollection":
+        return (
+          <div key={index} className="container-fluid">
+            <Reveal keyframes={fadeIn} delay={200} duration={1000} triggerOnce>
+              <BestSellingCollection content={component.options} />
+            </Reveal>
+          </div>
+        );
+
+      case "Banners2":
+        return (
+          <Reveal 
+            key={index} 
+            keyframes={fadeIn} 
+            delay={200} 
+            duration={1000} 
+            triggerOnce
+          >
+            <Banners2 content={component.options} />
+          </Reveal>
+        );
+
+      case "RewardsBanner":
+        return (
+          <Reveal 
+            key={index} 
+            keyframes={fadeIn} 
+            delay={200} 
+            duration={1000} 
+            triggerOnce
+          >
+            <RewardsBanner content={component.options} />
+          </Reveal>
+        );
+
       case "BlogCollection":
         return (
           <div key={index} className="container-fluid">
@@ -74,6 +142,19 @@ function Home() {
 
       case "brands":
         return <Brands key={index} content={component.options} />;
+
+      case "Stores":
+        return (
+          <Reveal 
+            key={index} 
+            keyframes={fadeIn} 
+            delay={200} 
+            duration={1000} 
+            triggerOnce
+          >
+            <Stores content={component.options} />
+          </Reveal>
+        );
 
       default:
         return null;

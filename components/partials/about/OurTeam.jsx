@@ -52,14 +52,14 @@ const OurTeam = ({ content }) => {
 
   return (
     <div className="bg-light-2 pt-6 pb-7 mb-6" id={content.id}>
-      <div className="container">
+      <div className="container-fluid">
         <h2 className="title text-center mb-4" id={titleId}>
           {title}
         </h2>
 
-        <div className="row">
+        <div className="row justify-content-center">
           {teamMembers.map((member, index) => (
-            <div className="col-sm-6 col-lg-3" key={index} id={member.id}>
+            <div className="col-auto mb-4" key={index} id={member.id}>
               <div className="member member-2 text-center">
                 <figure className="member-media" id={member.imageId}>
                   <img src={member.image} alt={`${member.name} photo`} />

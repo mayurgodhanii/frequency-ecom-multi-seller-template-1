@@ -33,36 +33,21 @@ function Wishlist({
       const token = isBrowser
         ? JSON.parse(localStorage.getItem("frequency-auth"))?.token
         : null;
-      const wishUniId = isBrowser ? localStorage.getItem("wish_uni_id") : null;
-
-      const headers = {
-        "Content-Type": "application/json",
-      };
-
-      let endpoint = "";
-      let params = {};
 
       if (!token || token === "null") {
-        endpoint = "/user/products-wish";
-        params = {
-          wish_uni_id: wishUniId || "",
-          page: 1,
-          size: 10,
-          search: "",
-          category: "",
-        };
-      } else {
-        endpoint = "/user/product-wish";
-        headers["x-access-token"] = token;
-        params = {
-          page: 1,
-          size: 10,
-          search: "",
-          category: "",
-        };
+        // For multivendor, authentication is required for wishlist
+        console.log("Authentication required for wishlist");
+        return;
       }
 
-      const response = await apirequest("GET", endpoint, headers, params);
+      const params = {
+        page: 1,
+        size: 10,
+        search: "",
+      };
+
+      const response = await apirequest("GET", "/wishlist/list", null, params);
+      
       if (response.success) {
         const wishlistItems = response.data.data.map((item) => {
           const product = item.product;
@@ -79,7 +64,7 @@ function Wishlist({
             product_id: item.product_id,
             name: product.name,
             price: price,
-            rate: product.rate,
+            rate: product.average_rating || product.rate,
             slug: product.slug,
             category: product.category,
             image: product.image?.[0] || "",

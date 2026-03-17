@@ -267,16 +267,32 @@ const handleRegisterSubmit = (e) => {
     const getGoogleCredentials = async () => {
       try {
         const response = await fetchGoogleCredentials();
+        
+        // Check if response is null or invalid
+        if (!response) {
+          console.log("Google credentials not configured");
+          setIsGoogleEnabled(false);
+          return;
+        }
+
         const encryptedData = response;
         const decryptedData = await decryptGoogleCredentials(
           encryptedData,
           process.env.NEXT_PUBLIC_ENCRYPT_SECRET_KEY
         );
         
+        // Check if decryption was successful
+        if (!decryptedData) {
+          console.log("Failed to decrypt Google credentials");
+          setIsGoogleEnabled(false);
+          return;
+        }
+
         const credentialsJson = JSON.parse(decryptedData);
-        setIsGoogleEnabled(credentialsJson.google_key);
+        setIsGoogleEnabled(credentialsJson.google_key || false);
       } catch (error) {
         console.error("Error getting Google credentials:", error);
+        setIsGoogleEnabled(false);
       }
     };
 

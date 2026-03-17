@@ -108,12 +108,17 @@ export const apirequest = async (method, url, data = null, params = null) => {
       headers: getHeaders(isFileUpload),
     };
 
-    if (method !== "GET" && method !== "DELETE" && data) {
-      config.data = isFileUpload
-        ? data
-        : ENCRYPT === "true"
-        ? EncryptResponse(data)
-        : data;
+    if (method !== "GET" && data) {
+      if (isFileUpload) {
+        // For file uploads, don't modify FormData, just pass it directly
+        config.data = data;
+      } else {
+        // For regular requests, inject site_id
+        data = {
+          ...data,
+        };
+        config.data = ENCRYPT === "true" ? EncryptResponse(data) : data;
+      }
     }
 
     const response = await api(config);

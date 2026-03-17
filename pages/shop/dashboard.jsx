@@ -180,15 +180,15 @@ function DashBoard(logout) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await apirequest("GET", "/user/profile", null, null);
+        const response = await apirequest("GET", "/users/profile", null, null);
 
         if (response.success) {
           const userData = {
-            name: response.data.name || "",
-            email: response.data.email || "",
-            date_of_birth: response.data.date_of_birth || "",
-            gender: response.data.gender || "",
-            phone: response.data.phone || "",
+            name: response.user.name || "",
+            email: response.user.email || "",
+            date_of_birth: response.user.date_of_birth || "",
+            gender: response.user.gender || "",
+            phone: response.user.phone || "",
           };
 
           localStorage.setItem("userData", JSON.stringify(userData));
@@ -210,7 +210,7 @@ function DashBoard(logout) {
     e.preventDefault();
 
     try {
-      const response = await apirequest("PUT", "/user/profile", {
+      const response = await apirequest("PUT", "/users/profile", {
         name: userData.name,
         date_of_birth: userData.date_of_birth,
         phone: userData.phone,

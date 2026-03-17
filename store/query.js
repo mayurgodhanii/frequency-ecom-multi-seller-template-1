@@ -7,7 +7,10 @@ import { apirequest } from '~/utils/api';
 // API Call Function
 async function fetchCategoriesApi({ page, size }) {
     try {
-        const response = await apirequest('GET', `/user/category-list?page=${page}&size=${size}`);
+        const response = await apirequest('GET', `/category/list`, null, { 
+            page, 
+            size,
+        });
         return response.data;
     } catch (error) {
         console.error('Error fetching categories:', error);

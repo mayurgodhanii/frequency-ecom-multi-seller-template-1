@@ -82,38 +82,20 @@ function* handleFetchWishlist() {
     const token = isBrowser
       ? JSON.parse(localStorage.getItem("frequency-auth"))?.token
       : null;
-    const wishUniId = isBrowser ? localStorage.getItem("wish_uni_id") : null;
-
-    const headers = {
-      "Content-Type": "application/json",
-    };
-
-    let endpoint = "";
-    let params = {};
 
     if (!token || token === "null") {
-      // Without token
-      endpoint = "/user/products-wish";
-      params = {
-        page: 1,
-        size: 10,
-        wish_uni_id: wishUniId,
-        search: "",
-        category: "",
-      };
-    } else {
-      // With token
-      endpoint = "/user/product-wish";
-      headers["x-access-token"] = token;
-      params = {
-        page: 1,
-        size: 10,
-        search: "",
-        category: "",
-      };
+      // For multivendor, authentication is required for wishlist
+      console.log("Authentication required for wishlist");
+      return;
     }
 
-    const response = yield call(apirequest, "GET", endpoint, null, params, headers);
+    const params = {
+      page: 1,
+      size: 10,
+      search: "",
+    };
+
+    const response = yield call(apirequest, "GET", "/wishlist/list", null, params);
 
     if (response.success) {
       const wishlist = response.data.data.map((item) => item.product);
@@ -132,55 +114,43 @@ function* handleWishlistAction(action) {
     const token = isBrowser
       ? JSON.parse(localStorage.getItem("frequency-auth"))?.token
       : null;
-    const wishUniId = isBrowser ? localStorage.getItem("wish_uni_id") : null;
+
+    if (!token || token === "null") {
+      // For multivendor, authentication is required for wishlist
+      toast.info("Please login to manage your wishlist");
+      return;
+    }
 
     const isAdding = action.type === actionTypes.addToWishlist;
     const product = action.payload.product;
-    const productId = isAdding ? product.id : product.product_id;
-
-    const headers = {
-      "Content-Type": "application/json",
-    };
+    const productId = isAdding ? product.id : product.product_id || product.id;
 
     let endpoint = "";
     let payload = {};
 
-    if (!token || token === "null") {  // Already handles string "null"
-      endpoint = "/user/products-wish";
+    if (isAdding) {
+      endpoint = "/wishlist/add";
       payload = {
         product_id: productId,
-        wish_uni_id: wishUniId || "",
       };
     } else {
-      endpoint = "/user/product-wish";
-      headers["x-access-token"] = token;
+      endpoint = "/wishlist/remove";
       payload = {
         product_id: productId,
       };
     }
 
-    const response = yield call(apirequest, "POST", endpoint, payload, headers);
-    
+    const method = isAdding ? "POST" : "DELETE";
+    const response = yield call(apirequest, method, endpoint, payload);
 
-    const success = response.status === (isAdding ? 201 : 200) && response.success;
-    
-
-    if (success) {
+    if (response.success) {
       toast.success(response.message);
-
-      
-      if ((!token || token === "null") && isAdding && response.wish_uni_id) {
-        
-        localStorage.setItem("wish_uni_id", response.wish_uni_id);
-      }
 
       if (!isAdding) {
         yield put(actions.removeFromWishlistSuccess(product));
       }
     } else {
-      console.error(
-        `Failed to ${isAdding ? "add to" : "remove from"} wishlist.`
-      );
+      toast.error(response.message || `Failed to ${isAdding ? "add to" : "remove from"} wishlist`);
     }
   } catch (error) {
     console.error(
@@ -191,6 +161,7 @@ function* handleWishlistAction(action) {
       } wishlist:`,
       error
     );
+    toast.error(`Failed to ${action.type === actionTypes.addToWishlist ? "add to" : "remove from"} wishlist`);
   }
 }
 

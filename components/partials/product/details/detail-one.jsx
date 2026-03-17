@@ -216,83 +216,56 @@ function DetailOne(props) {
         return null;
     }
 
-    // Handle single-option products
-    if (variantOptions.length === 1 && selectedPrimaryValue) {
-        const combination = variantCombinations.find(
-            (c) => normalize(c[primaryOptionName]) === normalize(selectedPrimaryValue)
-        );
-        if (!combination) {
-            return null;
-        }
+    // Find the matching combination based on the new API structure
+    const matchingCombination = variantCombinations.find(combo => {
+      // Check if primary option matches
+      if (selectedPrimaryValue && combo[primaryOptionName.toLowerCase()]) {
+        return normalize(combo[primaryOptionName.toLowerCase()]) === normalize(selectedPrimaryValue);
+      }
+      return false;
+    });
 
-        if (Array.isArray(combination.variants) && combination.variants.length > 0) {
-            const variant = combination.variants[0];
-            return {
-                available: Number(variant.available) || 0,
-                price: variant.price || combination.price || productData.price || "0",
-                usd_price: variant.usd_price || combination.usd_price || productData.usd_price || "0",
-                sale_price: variant.sale_price || combination.sale_price || productData.sale_price || null,
-                usd_sale_price: variant.usd_sale_price || combination.usd_sale_price || productData.usd_sale_price || null,
-                wholesale_price: variant.wholesale_price || combination.wholesale_price || productData.wholesale_price || null,
-                wholesale_usd_price: variant.wholesale_usd_price || combination.wholesale_usd_price || productData.wholesale_usd_price || null,
-            };
-        }
+    if (!matchingCombination) {
+      return null;
+    }
 
+    // If we have both primary and secondary options selected
+    if (selectedPrimaryValue && selectedSecondaryValue && matchingCombination.variants) {
+      const matchingVariant = matchingCombination.variants.find(variant => {
+        return normalize(variant[secondaryOptionName.toLowerCase()]) === normalize(selectedSecondaryValue);
+      });
+
+      if (matchingVariant) {
         return {
-            available: Number(combination.available) || 0,
-            price: combination.price || productData.price || "0",
-            usd_price: combination.usd_price || productData.usd_price || "0",
-            sale_price: combination.sale_price || productData.sale_price || null,
-            usd_sale_price: combination.usd_sale_price || productData.usd_sale_price || null,
-            wholesale_price: combination.wholesale_price || productData.wholesale_price || null,
-            wholesale_usd_price: combination.wholesale_usd_price || productData.wholesale_usd_price || null,
+          available: Number(matchingVariant.available) || 0,
+          price: matchingVariant.price || productData.price || "0",
+          usd_price: matchingVariant.usd_price || productData.usd_price || "0",
+          sale_price: matchingVariant.sale_price || productData.sale_price || null,
+          usd_sale_price: matchingVariant.usd_sale_price || productData.usd_sale_price || null,
+          wholesale_price: matchingVariant.wholesale_price || productData.wholesale_price || null,
+          wholesale_usd_price: matchingVariant.wholesale_usd_price || productData.wholesale_usd_price || null,
         };
+      }
     }
 
-    // Handle products with two variant options
-    if (selectedPrimaryValue && selectedSecondaryValue && variantCombinations.length > 0) {
-        const primaryCombination = variantCombinations.find(
-            (c) => normalize(c[primaryOptionName]) === normalize(selectedPrimaryValue)
-        );
-        if (primaryCombination) {
-            const variant = primaryCombination.variants?.find(
-                (v) => normalize(v[secondaryOptionName]) === normalize(selectedSecondaryValue)
-            );
-            if (variant) {
-                return {
-                    available: Number(variant.available) || 0,
-                    price: variant.price || primaryCombination.price || productData.price || "0",
-                    usd_price: variant.usd_price || primaryCombination.usd_price || productData.usd_price || "0",
-                    sale_price: variant.sale_price || primaryCombination.sale_price || productData.sale_price || null,
-                    usd_sale_price: variant.usd_sale_price || primaryCombination.usd_sale_price || productData.usd_sale_price || null,
-                    wholesale_price: variant.wholesale_price || primaryCombination.wholesale_price || productData.wholesale_price || null,
-                    wholesale_usd_price: variant.wholesale_usd_price || primaryCombination.wholesale_usd_price || productData.wholesale_usd_price || null,
-                };
-            }
-        }
-    }
-
-    // Return primary-level data if only primary option is selected
-    if (selectedPrimaryValue && variantCombinations.length > 0) {
-        const primaryCombination = variantCombinations.find(
-            (c) => normalize(c[primaryOptionName]) === normalize(selectedPrimaryValue)
-        );
-        if (primaryCombination) {
-            const totalStock = Array.isArray(primaryCombination.variants)
-                ? primaryCombination.variants.reduce(
-                    (sum, v) => sum + Number(v.available || 0), 0
-                )
-                : Number(primaryCombination.available || 0);
-            return {
-                available: totalStock,
-                price: primaryCombination.price || productData.price || "0",
-                usd_price: primaryCombination.usd_price || productData.usd_price || "0",
-                sale_price: primaryCombination.sale_price || productData.sale_price || null,
-                usd_sale_price: primaryCombination.usd_sale_price || productData.usd_sale_price || null,
-                wholesale_price: primaryCombination.wholesale_price || productData.wholesale_price || null,
-                wholesale_usd_price: primaryCombination.wholesale_usd_price || productData.wholesale_usd_price || null,
-            };
-        }
+    // If only primary option is selected, return aggregated data from all variants
+    if (selectedPrimaryValue && matchingCombination.variants) {
+      const totalStock = matchingCombination.variants.reduce(
+        (sum, variant) => sum + Number(variant.available || 0), 0
+      );
+      
+      // Use the first variant's pricing as default, or combination level pricing
+      const firstVariant = matchingCombination.variants[0] || {};
+      
+      return {
+        available: totalStock,
+        price: firstVariant.price || matchingCombination.price || productData.price || "0",
+        usd_price: firstVariant.usd_price || matchingCombination.usd_price || productData.usd_price || "0",
+        sale_price: firstVariant.sale_price || matchingCombination.sale_price || productData.sale_price || null,
+        usd_sale_price: firstVariant.usd_sale_price || matchingCombination.usd_sale_price || productData.usd_sale_price || null,
+        wholesale_price: firstVariant.wholesale_price || matchingCombination.wholesale_price || productData.wholesale_price || null,
+        wholesale_usd_price: firstVariant.wholesale_usd_price || matchingCombination.wholesale_usd_price || productData.wholesale_usd_price || null,
+      };
     }
 
     return null;

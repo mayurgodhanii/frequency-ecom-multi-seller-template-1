@@ -528,7 +528,64 @@ function InfoOne(props) {
             </div>
           </TabPanel>
 
+          <TabPanel className="tab-pane">
+            <div className="product-desc-content">
+              <h3>Additional Information</h3>
+              
+              {/* Feature Information */}
+              {product?.feature_json && Object.keys(product.feature_json).length > 0 && (
+                <div className="feature-info">
+                  <h4>Features</h4>
+                  <ul>
+                    {Object.entries(product.feature_json).map(([key, value]) => (
+                      <li key={key}>
+                        <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {value}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
+              {/* Information Details */}
+              {product?.information_json && Object.keys(product.information_json).length > 0 && (
+                <div className="information-details">
+                  <h4>Product Details</h4>
+                  <ul>
+                    {Object.entries(product.information_json).map(([key, value]) => (
+                      <li key={key}>
+                        <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {value}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Store Information */}
+              {product?.store_details && (
+                <div className="store-info">
+                  <h4>Store Information</h4>
+                  <ul>
+                    <li><strong>Store Name:</strong> {product.store_details.store_name}</li>
+                    <li><strong>Location:</strong> {product.store_details.store_location}</li>
+                    <li><strong>Delivery Days:</strong> {product.store_details.delivery_days} days</li>
+                    <li><strong>Store Rating:</strong> {product.store_details.store_average_rating} ({product.store_details.store_rating_count} reviews)</li>
+                  </ul>
+                </div>
+              )}
+
+              {/* Basic Product Info */}
+              <div className="basic-info">
+                <h4>Basic Information</h4>
+                <ul>
+                  <li><strong>Product Rating:</strong> {product?.average_rating} ({product?.rating_count} reviews)</li>
+                  <li><strong>Stock:</strong> {product?.stock > 0 ? `${product?.stock} available` : "Out of stock"}</li>
+                  <li><strong>Brand ID:</strong> {product?.brand_id}</li>
+                  <li><strong>Category ID:</strong> {product?.category_id}</li>
+                  {product?.subcategory_id && <li><strong>Subcategory ID:</strong> {product?.subcategory_id}</li>}
+                </ul>
+              </div>
+            </div>
+          </TabPanel>
 
           <TabPanel className="tab-pane">
             <div

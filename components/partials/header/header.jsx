@@ -240,6 +240,12 @@ function Header({ logo}) {
             </div>
 
             <div className="header-right">
+              <div className="become-seller-btn">
+                <ALink href="/store-registration" className="btn btn-seller">
+                  <span>Become a Seller</span>
+                </ALink>
+              </div>
+
               {token !== null && token !== "null" ? (
                 <div className="account">
                   <ALink href="/shop/dashboard" title="My account">

@@ -55,9 +55,14 @@
 	}
 }
 
-
+/* Enhanced Team Member Styles */
 .member {
 	margin-bottom: 2rem;
+	width: 376px;
+	height: 500px; // Fixed total height as specified
+	max-width: 100%;
+	margin-left: auto;
+	margin-right: auto;
 
 	p {
 		max-width: 240px;
@@ -79,26 +84,46 @@
 .member-media {
 	position: relative;
 	margin: 0;
+	overflow: hidden;
+	width: 376px;
+	height: 400px;
+	max-width: 100%;
+	
+	img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.3s ease;
+	}
 }
 
 .member-content {
-	padding-top: 2.4rem;
-	padding-bottom: 2.4rem;
+	padding-top: 1.5rem;
+	padding-bottom: 1rem;
 	overflow: hidden;
+	text-align: center;
+	height: 100px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	width: 376px;
+	max-width: 100%;
 }
 
 .member-title {
-	font-weight: 400;
-	font-size: 1.6rem;
+	font-weight: 600;
+	font-size: 1.4rem;
 	letter-spacing: 0;
-	margin-bottom: 0;
+	margin-bottom: 0.5rem;
+	color: #333;
 
 	span {
 		display: block;
-		color: $light-text;
-		font-weight: 300;
-		font-size: 1.4rem;
+		color: #999;
+		font-weight: 400;
+		font-size: 1.1rem;
 		margin-top: .3rem;
+		text-transform: capitalize;
 	}
 }
 
@@ -111,12 +136,13 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-    background-color: rgba(0,0,0,.3);
+    background-color: rgba(0,0,0,.6);
 	color: #fff;
 	opacity: 0;
 	visibility: hidden;
 	overflow: hidden;
 	z-index: 3;
+	transition: all 0.35s ease;
 
 	.member-title {
 		color: inherit;
@@ -133,13 +159,15 @@
 
 	.social-icon {
 		font-size: 1.5rem;
+		color: #fff;
+		transition: color 0.3s ease;
 
 		& + .social-icon {
 			margin-left: 2.8rem;
 		}
 
-		&:not(:hover) {
-			color: inherit;
+		&:hover {
+			color: $primary-color;
 		}
 	}
 }
@@ -150,8 +178,10 @@
 }
 
 .member:hover {
-	.member-content {
-		opacity: 0;
+	.member-media {
+		img {
+			transform: scale(1.05);
+		}
 	}
 
 	.member-overlay {
@@ -216,6 +246,35 @@
   }
 }
 
+@media (max-width: 768px) {
+	.member {
+		width: 100%;
+		max-width: 376px;
+	}
+	
+	.member-media {
+		width: 100%;
+		height: 320px;
+		
+		img {
+			height: 100%;
+		}
+	}
+	
+	.member-content {
+		width: 100%;
+		height: 80px;
+	}
+	
+	.member-title {
+		font-size: 1.2rem;
+		
+		span {
+			font-size: 1rem;
+		}
+	}
+}
+
 @media (max-width: 480px) {
 	.about-img-front {
 		max-width: 275px;
@@ -223,5 +282,29 @@
 
 	.about-images {
 		padding-top: 15rem;
+	}
+	
+	.member {
+		width: 100%;
+		max-width: 300px;
+	}
+	
+	.member-media {
+		width: 100%;
+		height: 280px;
+	}
+	
+	.member-content {
+		width: 100%;
+		height: 70px;
+		padding-top: 1rem;
+	}
+	
+	.member-title {
+		font-size: 1.1rem;
+		
+		span {
+			font-size: 0.9rem;
+		}
 	}
 }

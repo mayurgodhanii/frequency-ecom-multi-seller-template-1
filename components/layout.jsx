@@ -11,12 +11,8 @@ import MobileMenu from "./features/mobile-menu";
 import { actions } from "../store/demo";
 import { isSafariBrowser, isEdgeBrowser } from "~/utils";
 import Footer_second from "./partials/footer_second/footer";
-import Header_forth from "./partials/header_forth/header";
-import Header_five from "./partials/header_five/header";
 import Footer_third from "./partials/footer_third/footer";
 import Footer_forth from "./partials/footer_forth/footer";
-import Headerthird from "./partials/header_third/header";
-import HeaderSecound from "./partials/header_second/header";
 
 function Layout({ children, hideQuick, hideVideo, footerContent, logo, whiteLogo }) {
   const router = useRouter("");
@@ -118,11 +114,11 @@ function Layout({ children, hideQuick, hideVideo, footerContent, logo, whiteLogo
     }
     switch (footerId) {
 
-      case 2: return <Footer_second footerContent={footerContent} logo={logo} />;
-      case 3: return <Footer_third footerContent={footerContent} logo={logo} />;
-      case 4: return <Footer_forth footerContent={footerContent} logo={logo} />;
+      case 2: return <Footer footerContent={footerContent} logo={logo} />;
+      case 3: return <Footer footerContent={footerContent} logo={logo} />;
+      case 4: return <Footer footerContent={footerContent} logo={logo} />;
       case 1: return <Footer footerContent={footerContent} logo={logo} />;
-      default: return <Footer_forth footerContent={footerContent} logo={logo} />;
+      default: return <Footer footerContent={footerContent} logo={logo} />;
     }
   };
 
@@ -132,17 +128,17 @@ function Layout({ children, hideQuick, hideVideo, footerContent, logo, whiteLogo
     }
     switch (headerId) {
       case 6:
-        return <HeaderSecound logo={logo} />;
+        return <Header logo={logo} />;
       case 7:
-        return <Headerthird logo={logo} />;
+        return <Header logo={logo} />;
       case 8:
-        return <Header_forth logo={logo} />;
+        return <Header logo={logo} />;
       case 9:
-        return <Header_five logo={logo} />;
+        return <Header logo={logo} />;
       case 5:
         return <Header logo={logo} />;
       default:
-        return <Header_forth logo={logo} />;
+        return <Header logo={logo} />;
     }
   };
 

@@ -165,7 +165,7 @@ const WrappedApp = ({ Component, pageProps }) => {
       try {
         const response = await apirequest(
           "GET",
-          `/user/space-meta`,
+          `/space-meta`,
           null,
           null
         );
@@ -216,7 +216,7 @@ const WrappedApp = ({ Component, pageProps }) => {
       try {
         const response = await apirequest(
           "GET",
-          `/user/space-web-expiry`,
+          `/space-web-expiry`,
           null,
           null
         );

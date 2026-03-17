@@ -105,7 +105,7 @@ function Footer({ footerContent, logo }) {
   return (
     <footer className="footer footer-2" id={footerId}>
       <div className="footer-middle" id={`${footerId}-middle`}>
-        <div className={containerClass} id={`${footerId}-container`}>
+        <div className="container-fluid" id={`${footerId}-container`}>
           <div className="row" id={`${footerId}-row`}>
             <div className="col-sm-12 col-lg-6" id={`${imageId}-col`}>
               <div className="widget widget-about" id={imageId}>
@@ -214,7 +214,7 @@ function Footer({ footerContent, logo }) {
       </div>
 
       <div className="footer-bottom" id={`${footerId}-bottom`}>
-        <div className={containerClass} id={`${copyrightId}-container`}>
+        <div className="container-fluid" id={`${copyrightId}-container`}>
           {copyrightComponent.map((item, index) => (
             <p
               key={item.options.id}
